@@ -45,6 +45,8 @@ export function GoogleButton() {
     setLoading(true);
     setError(null);
     try {
+      const next = new URLSearchParams(window.location.search).get("next");
+      if (next) sessionStorage.setItem("qm_next", next);
       const url = await getGoogleAuthUrl();
       window.location.href = url;
     } catch (err) {

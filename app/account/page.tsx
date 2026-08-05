@@ -6,6 +6,13 @@ import { AuthShell } from "@/components/auth/auth-shell";
 import { authApi } from "@/lib/api/auth";
 import { useAuth } from "@/hooks/useAuth";
 
+function getNextDestination(): string {
+  const stored = sessionStorage.getItem("qm_next");
+  sessionStorage.removeItem("qm_next");
+  if (stored && stored.startsWith("/") && !stored.startsWith("/signin")) return stored;
+  return "/dashboard/datasets";
+}
+
 function AccountRedirect() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -15,6 +22,7 @@ function AccountRedirect() {
 
   useEffect(() => {
     const sessionToken = searchParams.get("session");
+    const next = getNextDestination();
 
     // Google OAuth lands here with a single-use session code. Exchange it for
     // session cookies (set on a same-site JSON response, so browsers store
@@ -25,18 +33,18 @@ function AccountRedirect() {
         .exchangeSession(sessionToken)
         .then(() => refresh())
         .then((ok) => {
-          if (ok) router.replace("/dashboard/datasets");
-          else router.replace("/signin?msg=google session expired");
+          router.replace(ok ? next : "/signin?msg=google session expired");
         })
-        .catch(() => {
-          router.replace("/signin?msg=google session expired");
+        .catch(async () => {
+          const ok = await refresh();
+          router.replace(ok ? next : "/signin?msg=google session expired");
         });
       return;
     }
 
-    if (status === "authed") {
-      router.replace("/dashboard/datasets");
-    } else if (status === "anonymous") {
+    if (status === "authed" && !exchanged.current) {
+      router.replace(next);
+    } else if (status === "anonymous" && !exchanged.current) {
       router.replace("/signin");
     }
   }, [status, searchParams, router, refresh]);

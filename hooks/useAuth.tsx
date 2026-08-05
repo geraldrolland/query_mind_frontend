@@ -52,6 +52,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
+  const refresh = useCallback(async () => {
+    try {
+      const u = await authApi.me();
+      setUser(u);
+      setStatus("authed");
+      return true;
+    } catch {
+      setUser(null);
+      setStatus("anonymous");
+      return false;
+    }
+  }, []);
+
   // Client-side guard driven by the backend /me result (unlike the optimistic
   // proxy check, this knows whether the session is actually valid).
   useEffect(() => {
@@ -60,8 +73,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       router.replace(`/signin?next=${encodeURIComponent(pathname)}`);
     } else if (status === "authed" && AUTH_PAGES.some((p) => pathname.startsWith(p))) {
       router.replace("/dashboard/datasets");
+    } else if (status === "anonymous" && AUTH_PAGES.some((p) => pathname.startsWith(p))) {
+      // A session may exist (e.g. after the OAuth exchange, or a stale guard
+      // bounce) even though the mount-time check failed. Re-verify so auth
+      // pages self-heal: a valid session here redirects to the dashboard.
+      refresh();
     }
-  }, [status, pathname, router]);
+  }, [status, pathname, router, refresh]);
 
   const login = useCallback(
     async (email: string, password: string, nextPath?: string) => {
@@ -93,19 +111,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     [router]
   );
-
-  const refresh = useCallback(async () => {
-    try {
-      const u = await authApi.me();
-      setUser(u);
-      setStatus("authed");
-      return true;
-    } catch {
-      setUser(null);
-      setStatus("anonymous");
-      return false;
-    }
-  }, []);
 
   const logout = useCallback(async () => {
     try {
