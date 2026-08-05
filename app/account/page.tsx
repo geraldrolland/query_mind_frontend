@@ -23,12 +23,10 @@ function AccountRedirect() {
       exchanged.current = true;
       authApi
         .exchangeSession(sessionToken)
-        .then(() => {
-          router.replace("/account");
-          return refresh();
-        })
+        .then(() => refresh())
         .then((ok) => {
-          if (!ok) router.replace("/signin?msg=google session expired");
+          if (ok) router.replace("/dashboard/datasets");
+          else router.replace("/signin?msg=google session expired");
         })
         .catch(() => {
           router.replace("/signin?msg=google session expired");
