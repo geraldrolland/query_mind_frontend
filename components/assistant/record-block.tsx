@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { motion } from "framer-motion";
 import {
   Bar,
   BarChart,
@@ -21,6 +22,18 @@ import { Loader2 } from "lucide-react";
 type Row = Record<string, unknown>;
 
 const PALETTE = ["#6366f1", "#22d3ee", "#a78bfa", "#34d399", "#f472b6", "#fbbf24"];
+
+function ChartEntrance({ children }: { children: React.ReactNode }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 12, scale: 0.98 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ duration: 0.4, ease: "easeOut" }}
+    >
+      {children}
+    </motion.div>
+  );
+}
 
 interface RecordBlockProps {
   datasetId: string;
@@ -104,35 +117,39 @@ export function RecordBlock({ datasetId, dsl, chartType }: RecordBlockProps) {
   if (chartType === "metricchart") {
     const value = rows[0]?.[valueKey];
     return (
-      <div className="rounded-xl border border-slate-800 bg-slate-950/60 px-5 py-4">
-        <p className="text-xs text-slate-400 truncate">{labelKey}: {valueKey}</p>
-        <p className="mt-1 text-2xl font-bold text-indigo-300">{formatValue(value)}</p>
-      </div>
+      <ChartEntrance>
+        <div className="rounded-xl border border-slate-800 bg-slate-950/60 px-5 py-4">
+          <p className="text-xs text-slate-400 truncate">{labelKey}: {valueKey}</p>
+          <p className="mt-1 text-2xl font-bold text-indigo-300">{formatValue(value)}</p>
+        </div>
+      </ChartEntrance>
     );
   }
 
   if (chartType === "tablechart") {
     return (
-      <div className="max-h-72 overflow-auto rounded-xl border border-slate-800 bg-slate-950/60">
-        <table className="w-full text-left text-xs">
-          <thead className="sticky top-0 bg-slate-900 text-slate-400">
-            <tr>
-              {keys.map((k) => (
-                <th key={k} className="px-3 py-2 font-medium">{k}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((row, i) => (
-              <tr key={i} className="border-t border-slate-800/70">
+      <ChartEntrance>
+        <div className="max-h-72 overflow-auto rounded-xl border border-slate-800 bg-slate-950/60">
+          <table className="w-full text-left text-xs">
+            <thead className="sticky top-0 bg-slate-900 text-slate-400">
+              <tr>
                 {keys.map((k) => (
-                  <td key={k} className="px-3 py-2 text-slate-200">{formatValue(row[k])}</td>
+                  <th key={k} className="px-3 py-2 font-medium">{k}</th>
                 ))}
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {rows.map((row, i) => (
+                <tr key={i} className="border-t border-slate-800/70">
+                  {keys.map((k) => (
+                    <td key={k} className="px-3 py-2 text-slate-200">{formatValue(row[k])}</td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </ChartEntrance>
     );
   }
 
@@ -142,18 +159,20 @@ export function RecordBlock({ datasetId, dsl, chartType }: RecordBlockProps) {
       value: Number(row[valueKey]) || 0,
     }));
     return (
-      <div className="h-64 w-full rounded-xl border border-slate-800 bg-slate-950/60 p-2">
-        <ResponsiveContainer width="100%" height="100%">
-          <PieChart>
-            <Pie data={data} dataKey="value" nameKey="name" innerRadius="45%" outerRadius="80%" paddingAngle={2}>
-              {data.map((_, i) => (
-                <Cell key={i} fill={PALETTE[i % PALETTE.length]} />
-              ))}
-            </Pie>
-            <Tooltip contentStyle={{ background: "#0f172a", border: "1px solid #334155", borderRadius: 8, fontSize: 12 }} />
-          </PieChart>
-        </ResponsiveContainer>
-      </div>
+      <ChartEntrance>
+        <div className="h-64 w-full rounded-xl border border-slate-800 bg-slate-950/60 p-2">
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie data={data} dataKey="value" nameKey="name" innerRadius="45%" outerRadius="80%" paddingAngle={2}>
+                {data.map((_, i) => (
+                  <Cell key={i} fill={PALETTE[i % PALETTE.length]} />
+                ))}
+              </Pie>
+              <Tooltip contentStyle={{ background: "#0f172a", border: "1px solid #334155", borderRadius: 8, fontSize: 12 }} />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+      </ChartEntrance>
     );
   }
 
@@ -164,30 +183,32 @@ export function RecordBlock({ datasetId, dsl, chartType }: RecordBlockProps) {
   }));
 
   return (
-    <div className="h-64 w-full rounded-xl border border-slate-800 bg-slate-950/60 p-2">
-      <ResponsiveContainer width="100%" height="100%">
-        {isLine ? (
-          <LineChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-            <XAxis dataKey="label" stroke="#64748b" fontSize={11} tickLine={false} />
-            <YAxis stroke="#64748b" fontSize={11} tickLine={false} />
-            <Tooltip
-              contentStyle={{ background: "#0f172a", border: "1px solid #334155", borderRadius: 8, fontSize: 12 }}
-            />
-            <Line type="monotone" dataKey="value" stroke="#6366f1" strokeWidth={2} dot={{ r: 3, fill: "#22d3ee" }} />
-          </LineChart>
-        ) : (
-          <BarChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-            <XAxis dataKey="label" stroke="#64748b" fontSize={11} tickLine={false} />
-            <YAxis stroke="#64748b" fontSize={11} tickLine={false} />
-            <Tooltip
-              contentStyle={{ background: "#0f172a", border: "1px solid #334155", borderRadius: 8, fontSize: 12 }}
-            />
-            <Bar dataKey="value" fill="#6366f1" radius={[4, 4, 0, 0]} />
-          </BarChart>
-        )}
-      </ResponsiveContainer>
-    </div>
+    <ChartEntrance>
+      <div className="h-64 w-full rounded-xl border border-slate-800 bg-slate-950/60 p-2">
+        <ResponsiveContainer width="100%" height="100%">
+          {isLine ? (
+            <LineChart data={data}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
+              <XAxis dataKey="label" stroke="#64748b" fontSize={11} tickLine={false} />
+              <YAxis stroke="#64748b" fontSize={11} tickLine={false} />
+              <Tooltip
+                contentStyle={{ background: "#0f172a", border: "1px solid #334155", borderRadius: 8, fontSize: 12 }}
+              />
+              <Line type="monotone" dataKey="value" stroke="#6366f1" strokeWidth={2} dot={{ r: 3, fill: "#22d3ee" }} />
+            </LineChart>
+          ) : (
+            <BarChart data={data}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
+              <XAxis dataKey="label" stroke="#64748b" fontSize={11} tickLine={false} />
+              <YAxis stroke="#64748b" fontSize={11} tickLine={false} />
+              <Tooltip
+                contentStyle={{ background: "#0f172a", border: "1px solid #334155", borderRadius: 8, fontSize: 12 }}
+              />
+              <Bar dataKey="value" fill="#6366f1" radius={[4, 4, 0, 0]} />
+            </BarChart>
+          )}
+        </ResponsiveContainer>
+      </div>
+    </ChartEntrance>
   );
 }

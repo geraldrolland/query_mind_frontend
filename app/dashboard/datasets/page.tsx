@@ -2,9 +2,11 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { motion } from "framer-motion";
 import { Database, MessageSquare, Plus, Trash2 } from "lucide-react";
 import { useDatasets } from "@/hooks/useDatasets";
 import { UploadDatasetModal } from "@/components/datasets/upload-dataset-modal";
+import { FadeIn, Stagger, StaggerItem } from "@/components/motion";
 import type { Dataset } from "@/lib/types";
 
 function formatBytes(bytes: number): string {
@@ -23,13 +25,25 @@ function DatasetCard({
   const [confirming, setConfirming] = useState(false);
 
   return (
-    <div className="flex flex-col rounded-xl border border-slate-800 bg-slate-900/60 p-5 transition hover:border-indigo-500/50">
+    <motion.div
+      whileHover={{ y: -5 }}
+      transition={{ type: "spring", stiffness: 320, damping: 22 }}
+      className="flex flex-col rounded-xl border border-slate-800 bg-slate-900/60 p-5 transition hover:border-indigo-500/50"
+    >
       <div className="mb-3 flex items-start justify-between">
-        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-500/15">
+        <motion.div
+          whileHover={{ scale: 1.08, rotate: -4 }}
+          transition={{ type: "spring", stiffness: 300, damping: 15 }}
+          className="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-500/15"
+        >
           <Database className="h-5 w-5 text-indigo-400" />
-        </div>
+        </motion.div>
         {confirming ? (
-          <div className="flex gap-2">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="flex gap-2"
+          >
             <button
               onClick={() => onDelete(dataset.id)}
               className="rounded bg-red-500/20 px-2 py-1 text-xs text-red-300 hover:bg-red-500/30"
@@ -42,7 +56,7 @@ function DatasetCard({
             >
               Cancel
             </button>
-          </div>
+          </motion.div>
         ) : (
           <button
             onClick={() => setConfirming(true)}
@@ -79,7 +93,7 @@ function DatasetCard({
           Ask AI
         </Link>
       </div>
-    </div>
+    </motion.div>
   );
 }
 
@@ -89,26 +103,28 @@ export default function DatasetsPage() {
 
   return (
     <div className="p-8">
-      <div className="mb-8 flex items-center justify-between">
+      <FadeIn className="mb-8 flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Datasets</h1>
           <p className="text-sm text-slate-400">
             Upload CSVs and ask questions about your data.
           </p>
         </div>
-        <button
+        <motion.button
+          whileHover={{ scale: 1.03 }}
+          whileTap={{ scale: 0.97 }}
           onClick={() => setModalOpen(true)}
           className="flex items-center gap-2 rounded-lg bg-indigo-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-400"
         >
           <Plus className="h-4 w-4" />
           Upload dataset
-        </button>
-      </div>
+        </motion.button>
+      </FadeIn>
 
       {error && (
-        <div className="mb-6 rounded-lg border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+        <FadeIn className="mb-6 rounded-lg border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-300">
           {error}
-        </div>
+        </FadeIn>
       )}
 
       {loading ? (
@@ -121,36 +137,61 @@ export default function DatasetsPage() {
           ))}
         </div>
       ) : datasets.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-800 py-20 text-center">
-          <Database className="mb-4 h-12 w-12 text-slate-600" />
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+          className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-800 py-20 text-center"
+        >
+          <motion.div
+            initial={{ scale: 0, rotate: -15 }}
+            animate={{ scale: 1, rotate: 0 }}
+            transition={{ type: "spring", stiffness: 220, damping: 16, delay: 0.15 }}
+            className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-500/15"
+          >
+            <Database className="h-7 w-7 text-indigo-400" />
+          </motion.div>
           <h2 className="text-lg font-semibold text-slate-300">No datasets yet</h2>
           <p className="mb-6 mt-1 max-w-sm text-sm text-slate-500">
             Upload your first CSV — duplicates are removed automatically and
             missing values are reported.
           </p>
-          <button
+          <motion.button
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
             onClick={() => setModalOpen(true)}
             className="flex items-center gap-2 rounded-lg bg-indigo-500 px-5 py-2.5 text-sm font-semibold text-white hover:bg-indigo-400"
           >
             <Plus className="h-4 w-4" />
             Upload your first dataset
-          </button>
-        </div>
+          </motion.button>
+        </motion.div>
       ) : (
-        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <Stagger className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {datasets.map((d) => (
-            <DatasetCard key={d.id} dataset={d} onDelete={(id) => remove(id)} />
+            <StaggerItem key={d.id} className="h-full">
+              <DatasetCard dataset={d} onDelete={(id) => remove(id)} />
+            </StaggerItem>
           ))}
-        </div>
+        </Stagger>
       )}
 
       {uploading && (
-        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/60">
-          <div className="rounded-xl border border-slate-800 bg-slate-900 p-6 text-center">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="fixed inset-0 z-40 flex items-center justify-center bg-black/60"
+        >
+          <motion.div
+            initial={{ scale: 0.92, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: "spring", stiffness: 300, damping: 22 }}
+            className="rounded-xl border border-slate-800 bg-slate-900 p-6 text-center"
+          >
             <div className="mb-3 h-8 w-8 animate-spin rounded-full border-2 border-indigo-500 border-t-transparent mx-auto" />
             <p className="text-sm text-slate-300">Uploading and cleaning your data…</p>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       )}
 
       <UploadDatasetModal open={modalOpen} onClose={() => setModalOpen(false)} />

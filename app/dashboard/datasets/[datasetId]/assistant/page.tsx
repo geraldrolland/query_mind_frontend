@@ -2,6 +2,7 @@
 
 import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { AnimatePresence, motion } from "framer-motion";
 import { useParams } from "next/navigation";
 import { ArrowLeft, Sparkles, SendHorizonal } from "lucide-react";
 import { useChat } from "@/hooks/useChat";
@@ -158,32 +159,50 @@ export default function AssistantPage() {
 
       <div ref={scrollRef} className="flex-1 space-y-5 overflow-y-auto px-6 py-6">
         {messages.length === 0 && (
-          <div className="mx-auto mt-16 max-w-xl text-center">
-            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-500/15">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
+            className="mx-auto mt-16 max-w-xl text-center"
+          >
+            <motion.div
+              initial={{ scale: 0, rotate: -15 }}
+              animate={{ scale: 1, rotate: 0 }}
+              transition={{ type: "spring", stiffness: 220, damping: 16, delay: 0.15 }}
+              className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-500/15"
+            >
               <Sparkles className="h-7 w-7 text-indigo-400" />
-            </div>
+            </motion.div>
             <h2 className="text-xl font-bold">Ask anything about your data</h2>
             <p className="mt-2 text-sm text-slate-400">
               QueryMind converts your question into a structured query, runs it
               against your dataset, and explains the results.
             </p>
             <div className="mt-6 flex flex-wrap justify-center gap-2">
-              {SUGGESTIONS.map((s) => (
-                <button
+              {SUGGESTIONS.map((s, i) => (
+                <motion.button
                   key={s}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.25 + i * 0.08, duration: 0.35 }}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.96 }}
                   onClick={() => send(s)}
                   className="rounded-full border border-slate-700 px-4 py-2 text-sm text-slate-300 hover:border-indigo-500 hover:text-indigo-300"
                 >
                   {s}
-                </button>
+                </motion.button>
               ))}
             </div>
-          </div>
+          </motion.div>
         )}
 
         {messages.map((m) => (
-          <div
+          <motion.div
             key={m.id}
+            initial={{ opacity: 0, y: 14, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 0.35, ease: "easeOut" }}
             className={`mx-auto flex max-w-3xl ${
               m.role === "user" ? "justify-end" : "justify-start"
             }`}
@@ -226,17 +245,25 @@ export default function AssistantPage() {
                 </div>
               )}
             </div>
-          </div>
+          </motion.div>
         ))}
 
-        {streaming && (
-          <div className="mx-auto flex max-w-3xl justify-start">
-            <div className="flex items-center gap-2 rounded-2xl border border-slate-800 bg-slate-900/70 px-4 py-1.5">
-              <StreamingDots />
-              {progress && <span className="text-xs text-slate-400">{progress}</span>}
-            </div>
-          </div>
-        )}
+        <AnimatePresence>
+          {streaming && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.25 }}
+              className="mx-auto flex max-w-3xl justify-start"
+            >
+              <div className="flex items-center gap-2 rounded-2xl border border-slate-800 bg-slate-900/70 px-4 py-1.5">
+                <StreamingDots />
+                {progress && <span className="text-xs text-slate-400">{progress}</span>}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       <form onSubmit={onSubmit} className="border-t border-slate-800 px-6 py-4">

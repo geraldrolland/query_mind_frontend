@@ -2,11 +2,13 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { motion } from "framer-motion";
 import { useParams } from "next/navigation";
 import { ArrowLeft, MessageSquare } from "lucide-react";
 import { datasetApi, readCleaningReport } from "@/lib/api/datasets";
 import { apiErrorMessage } from "@/lib/api/client";
 import { CleaningReportCard } from "@/components/datasets/upload-dataset-modal";
+import { FadeIn, Reveal, Stagger, StaggerItem } from "@/components/motion";
 import type { CleaningReport, Dataset, DatasetProfile, RecordsResponse } from "@/lib/types";
 
 function SchemaTable({ schema }: { schema: Record<string, { type: string; allowed_operators: string[] }> }) {
@@ -52,7 +54,8 @@ export default function DatasetDetailPage() {
   const [page, setPage] = useState(1);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [profileLoading, setProfileLoading] = useState(true);
+  const [profileLoadedFor, setProfileLoadedFor] = useState<string | null>(null);
+  const profileLoading = profileLoadedFor !== datasetId;
 
   useEffect(() => {
     let ignore = false;
@@ -81,17 +84,19 @@ export default function DatasetDetailPage() {
 
   useEffect(() => {
     let ignore = false;
-    setProfileLoading(true);
     datasetApi
       .profile(datasetId)
       .then((p) => {
-        if (!ignore) setProfile(p);
+        if (!ignore) {
+          setProfile(p);
+          setProfileLoadedFor(datasetId);
+        }
       })
       .catch(() => {
-        if (!ignore) setProfile(null);
-      })
-      .finally(() => {
-        if (!ignore) setProfileLoading(false);
+        if (!ignore) {
+          setProfile(null);
+          setProfileLoadedFor(datasetId);
+        }
       });
     return () => {
       ignore = true;
@@ -128,7 +133,7 @@ export default function DatasetDetailPage() {
 
   return (
     <div className="p-8">
-      <div className="mb-6 flex items-start justify-between">
+      <FadeIn className="mb-6 flex items-start justify-between">
         <div>
           <Link
             href="/dashboard/datasets"
@@ -142,22 +147,26 @@ export default function DatasetDetailPage() {
             {dataset ? new Date(dataset.created_at).toLocaleDateString() : ""}
           </p>
         </div>
-        <Link
-          href={`/dashboard/datasets/${datasetId}/assistant`}
-          className="flex items-center gap-2 rounded-lg bg-indigo-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-400"
-        >
-          <MessageSquare className="h-4 w-4" />
-          Ask the AI assistant
-        </Link>
-      </div>
+        <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
+          <Link
+            href={`/dashboard/datasets/${datasetId}/assistant`}
+            className="flex items-center gap-2 rounded-lg bg-indigo-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-400"
+          >
+            <MessageSquare className="h-4 w-4" />
+            Ask the AI assistant
+          </Link>
+        </motion.div>
+      </FadeIn>
 
-      <div className="grid gap-6 lg:grid-cols-3">
+      <Stagger className="grid gap-6 lg:grid-cols-3" amount={0.05}>
         <div className="space-y-6 lg:col-span-2">
           {cleaningReport && (
-            <CleaningReportCard report={cleaningReport} datasetId="" />
+            <StaggerItem>
+              <CleaningReportCard report={cleaningReport} datasetId="" />
+            </StaggerItem>
           )}
 
-          <div>
+          <StaggerItem>
             <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-400">
               Sample rows
             </h2>
@@ -173,14 +182,20 @@ export default function DatasetDetailPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800">
-                  {records?.records.map((row) => (
-                    <tr key={row.id} className="bg-slate-900/40">
+                  {records?.records.map((row, ri) => (
+                    <motion.tr
+                      key={row.id}
+                      initial={{ opacity: 0, y: 6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.05 + ri * 0.04, duration: 0.3 }}
+                      className="bg-slate-900/40"
+                    >
                       {columns.map((col) => (
                         <td key={col} className="max-w-48 truncate px-3 py-2 text-slate-300">
                           {row.data[col] == null ? <span className="text-slate-600">∅</span> : String(row.data[col])}
                         </td>
                       ))}
-                    </tr>
+                    </motion.tr>
                   ))}
                 </tbody>
               </table>
@@ -192,28 +207,30 @@ export default function DatasetDetailPage() {
                   {" "}· {records.total.toLocaleString()} rows total
                 </span>
                 <div className="flex gap-2">
-                  <button
+                  <motion.button
+                    whileTap={{ scale: 0.95 }}
                     onClick={() => setPage((p) => Math.max(1, p - 1))}
                     disabled={page <= 1}
                     className="rounded bg-slate-800 px-3 py-1.5 text-xs disabled:opacity-40"
                   >
                     Prev
-                  </button>
-                  <button
+                  </motion.button>
+                  <motion.button
+                    whileTap={{ scale: 0.95 }}
                     onClick={() => setPage((p) => p + 1)}
                     disabled={page * 20 >= records.total}
                     className="rounded bg-slate-800 px-3 py-1.5 text-xs disabled:opacity-40"
                   >
                     Next
-                  </button>
+                  </motion.button>
                 </div>
               </div>
             )}
-          </div>
+          </StaggerItem>
         </div>
 
         <div className="space-y-6">
-          <div>
+          <StaggerItem>
             <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-400">
               Column stats
             </h2>
@@ -229,7 +246,13 @@ export default function DatasetDetailPage() {
                 </>
               ) : (
                 profile?.columns.map((col) => (
-                <div key={col.name} className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
+                <motion.div
+                  key={col.name}
+                  initial={{ opacity: 0, x: 16 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.08, duration: 0.35 }}
+                  className="rounded-xl border border-slate-800 bg-slate-900/60 p-4"
+                >
                   <div className="mb-1 flex items-center justify-between">
                     <span className="text-sm font-medium text-slate-200">{col.name}</span>
                     <span className="rounded-full bg-indigo-500/15 px-2 py-0.5 text-xs text-indigo-300">
@@ -252,20 +275,24 @@ export default function DatasetDetailPage() {
                     )}
                     {col.nulls > 0 && <span className="text-amber-400"> · {col.nulls} nulls</span>}
                   </div>
-                </div>
+                </motion.div>
                 ))
               )}
             </div>
-          </div>
+          </StaggerItem>
 
-          <div>
+          <StaggerItem>
             <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-400">
               Schema
             </h2>
-            {schema && <SchemaTable schema={schema} />}
-          </div>
+            {schema && (
+              <Reveal y={12}>
+                <SchemaTable schema={schema} />
+              </Reveal>
+            )}
+          </StaggerItem>
         </div>
-      </div>
+      </Stagger>
     </div>
   );
 }
