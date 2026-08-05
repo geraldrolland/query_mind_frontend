@@ -95,6 +95,10 @@ export async function streamChat(
         handlers.onEvent({ event: "error", data: { message: String(data.error) } });
       } else if (data.done) {
         handlers.onEvent({ event: "done", data: {} });
+      } else if (typeof data.progress === "string") {
+        handlers.onEvent({ event: "progress", data: { status: data.progress } });
+      } else if (typeof data.delta === "string") {
+        handlers.onEvent({ event: "delta", data: { content: data.delta } });
       } else {
         handlers.onEvent({
           event: "message",

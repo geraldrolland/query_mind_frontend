@@ -41,7 +41,7 @@ function toChatMessage(m: DatasetMessage): ChatMessage {
 export default function AssistantPage() {
   const params = useParams<{ datasetId: string }>();
   const datasetId = params.datasetId;
-  const { messages, streaming, send, load } = useChat(datasetId);
+  const { messages, streaming, progress, send, load } = useChat(datasetId);
   const { datasets } = useDatasets();
   const [input, setInput] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -128,7 +128,7 @@ export default function AssistantPage() {
       return;
     }
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
-  }, [messages, streaming]);
+  }, [messages, streaming, progress]);
 
   function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -231,8 +231,9 @@ export default function AssistantPage() {
 
         {streaming && (
           <div className="mx-auto flex max-w-3xl justify-start">
-            <div className="rounded-2xl border border-slate-800 bg-slate-900/70 px-4 py-1.5">
+            <div className="flex items-center gap-2 rounded-2xl border border-slate-800 bg-slate-900/70 px-4 py-1.5">
               <StreamingDots />
+              {progress && <span className="text-xs text-slate-400">{progress}</span>}
             </div>
           </div>
         )}

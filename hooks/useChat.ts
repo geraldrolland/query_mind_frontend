@@ -28,9 +28,12 @@ function recordFromEvent(
   return { ...base, type: "text", content: String(event.data.content ?? "") };
 }
 
+const PLACEHOLDER_ID = "streaming-placeholder";
+
 export function useChat(datasetId: string) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [streaming, setStreaming] = useState(false);
+  const [progress, setProgress] = useState<string | null>(null);
   const historyRef = useRef<ChatMessage[]>([]);
 
   const send = useCallback(
@@ -48,6 +51,7 @@ export function useChat(datasetId: string) {
       historyRef.current = nextMessages;
       setMessages(nextMessages);
       setStreaming(true);
+      setProgress(null);
 
       const history = messageToHistory(historyRef.current.slice(0, -1));
 
@@ -56,11 +60,35 @@ export function useChat(datasetId: string) {
           onEvent: (event: ChatEvent) => {
             if (event.event === "message") {
               const incoming = recordFromEvent(event);
+              historyRef.current = historyRef.current.filter(
+                (m) => m.id !== PLACEHOLDER_ID
+              );
               historyRef.current = historyRef.current.map((m) =>
                 m.id === incoming.id ? incoming : m
               );
               if (!historyRef.current.some((m) => m.id === incoming.id)) {
                 historyRef.current = [...historyRef.current, incoming];
+              }
+              setProgress(null);
+              setMessages([...historyRef.current]);
+            } else if (event.event === "progress") {
+              setProgress(event.data.status);
+            } else if (event.event === "delta") {
+              const last = historyRef.current[historyRef.current.length - 1];
+              if (last?.id === PLACEHOLDER_ID) {
+                historyRef.current = [
+                  ...historyRef.current.slice(0, -1),
+                  { ...last, content: last.content + event.data.content },
+                ];
+              } else {
+                historyRef.current = [
+                  ...historyRef.current,
+                  {
+                    id: PLACEHOLDER_ID,
+                    role: "assistant",
+                    content: event.data.content,
+                  },
+                ];
               }
               setMessages([...historyRef.current]);
             } else if (event.event === "error") {
@@ -96,14 +124,17 @@ export function useChat(datasetId: string) {
                 is_error: true,
               },
             ];
+            setProgress(null);
             setMessages([...historyRef.current]);
           },
           onDone: () => {
             setStreaming(false);
+            setProgress(null);
           },
         });
       } finally {
         setStreaming(false);
+        setProgress(null);
       }
     },
     [datasetId, streaming]
@@ -112,6 +143,7 @@ export function useChat(datasetId: string) {
   const reset = useCallback(() => {
     historyRef.current = [];
     setMessages([]);
+    setProgress(null);
   }, []);
 
   const load = useCallback((loaded: ChatMessage[]) => {
@@ -119,5 +151,5 @@ export function useChat(datasetId: string) {
     setMessages(loaded);
   }, []);
 
-  return { messages, streaming, send, reset, load };
+  return { messages, streaming, progress, send, reset, load };
 }

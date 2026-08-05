@@ -76,6 +76,8 @@ export type ChatEvent =
         content: unknown;
       };
     }
+  | { event: "progress"; data: { status: string } }
+  | { event: "delta"; data: { content: string } }
   | { event: "done"; data: Record<string, never> }
   | { event: "error"; data: { message: string } };
 
