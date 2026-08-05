@@ -1,23 +1,47 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AuthShell } from "@/components/auth/auth-shell";
+import { authApi } from "@/lib/api/auth";
 import { useAuth } from "@/hooks/useAuth";
 
 function AccountRedirect() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const { status } = useAuth();
+  const { status, refresh } = useAuth();
   const [msg] = useState(searchParams.get("msg"));
+  const exchanged = useRef(false);
 
   useEffect(() => {
+    const sessionToken = searchParams.get("session");
+
+    // Google OAuth lands here with a single-use session code. Exchange it for
+    // session cookies (set on a same-site JSON response, so browsers store
+    // them) before trusting the auth status.
+    if (sessionToken && !exchanged.current) {
+      exchanged.current = true;
+      authApi
+        .exchangeSession(sessionToken)
+        .then(() => {
+          router.replace("/account");
+          return refresh();
+        })
+        .then((ok) => {
+          if (!ok) router.replace("/signin?msg=google session expired");
+        })
+        .catch(() => {
+          router.replace("/signin?msg=google session expired");
+        });
+      return;
+    }
+
     if (status === "authed") {
       router.replace("/dashboard/datasets");
     } else if (status === "anonymous") {
       router.replace("/signin");
     }
-  }, [status, router]);
+  }, [status, searchParams, router, refresh]);
 
   return (
     <AuthShell

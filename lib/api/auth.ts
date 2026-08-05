@@ -21,6 +21,11 @@ export const authApi = {
     return res.data;
   },
 
+  async exchangeSession(token: string) {
+    const res = await api.post("/api/v1/auth/session", { token });
+    return res.data;
+  },
+
   async logout() {
     await api.post("/api/v1/auth/logout");
   },
