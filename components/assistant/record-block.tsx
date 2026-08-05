@@ -35,6 +35,14 @@ function ChartEntrance({ children }: { children: React.ReactNode }) {
   );
 }
 
+function ChartScroller({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="overflow-x-auto">
+      <div className="h-64 min-w-[300px] w-full">{children}</div>
+    </div>
+  );
+}
+
 interface RecordBlockProps {
   datasetId: string;
   dsl: Record<string, unknown>;
@@ -160,17 +168,19 @@ export function RecordBlock({ datasetId, dsl, chartType }: RecordBlockProps) {
     }));
     return (
       <ChartEntrance>
-        <div className="h-64 w-full rounded-xl border border-slate-800 bg-slate-950/60 p-2">
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <Pie data={data} dataKey="value" nameKey="name" innerRadius="45%" outerRadius="80%" paddingAngle={2}>
-                {data.map((_, i) => (
-                  <Cell key={i} fill={PALETTE[i % PALETTE.length]} />
-                ))}
-              </Pie>
-              <Tooltip contentStyle={{ background: "#0f172a", border: "1px solid #334155", borderRadius: 8, fontSize: 12 }} />
-            </PieChart>
-          </ResponsiveContainer>
+        <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-2">
+          <ChartScroller>
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie data={data} dataKey="value" nameKey="name" innerRadius="45%" outerRadius="80%" paddingAngle={2}>
+                  {data.map((_, i) => (
+                    <Cell key={i} fill={PALETTE[i % PALETTE.length]} />
+                  ))}
+                </Pie>
+                <Tooltip contentStyle={{ background: "#0f172a", border: "1px solid #334155", borderRadius: 8, fontSize: 12 }} />
+              </PieChart>
+            </ResponsiveContainer>
+          </ChartScroller>
         </div>
       </ChartEntrance>
     );
@@ -184,30 +194,32 @@ export function RecordBlock({ datasetId, dsl, chartType }: RecordBlockProps) {
 
   return (
     <ChartEntrance>
-      <div className="h-64 w-full rounded-xl border border-slate-800 bg-slate-950/60 p-2">
-        <ResponsiveContainer width="100%" height="100%">
-          {isLine ? (
-            <LineChart data={data}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-              <XAxis dataKey="label" stroke="#64748b" fontSize={11} tickLine={false} />
-              <YAxis stroke="#64748b" fontSize={11} tickLine={false} />
-              <Tooltip
-                contentStyle={{ background: "#0f172a", border: "1px solid #334155", borderRadius: 8, fontSize: 12 }}
-              />
-              <Line type="monotone" dataKey="value" stroke="#6366f1" strokeWidth={2} dot={{ r: 3, fill: "#22d3ee" }} />
-            </LineChart>
-          ) : (
-            <BarChart data={data}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-              <XAxis dataKey="label" stroke="#64748b" fontSize={11} tickLine={false} />
-              <YAxis stroke="#64748b" fontSize={11} tickLine={false} />
-              <Tooltip
-                contentStyle={{ background: "#0f172a", border: "1px solid #334155", borderRadius: 8, fontSize: 12 }}
-              />
-              <Bar dataKey="value" fill="#6366f1" radius={[4, 4, 0, 0]} />
-            </BarChart>
-          )}
-        </ResponsiveContainer>
+      <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-2">
+        <ChartScroller>
+          <ResponsiveContainer width="100%" height="100%">
+            {isLine ? (
+              <LineChart data={data}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
+                <XAxis dataKey="label" stroke="#64748b" fontSize={11} tickLine={false} />
+                <YAxis stroke="#64748b" fontSize={11} tickLine={false} />
+                <Tooltip
+                  contentStyle={{ background: "#0f172a", border: "1px solid #334155", borderRadius: 8, fontSize: 12 }}
+                />
+                <Line type="monotone" dataKey="value" stroke="#6366f1" strokeWidth={2} dot={{ r: 3, fill: "#22d3ee" }} />
+              </LineChart>
+            ) : (
+              <BarChart data={data}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
+                <XAxis dataKey="label" stroke="#64748b" fontSize={11} tickLine={false} />
+                <YAxis stroke="#64748b" fontSize={11} tickLine={false} />
+                <Tooltip
+                  contentStyle={{ background: "#0f172a", border: "1px solid #334155", borderRadius: 8, fontSize: 12 }}
+                />
+                <Bar dataKey="value" fill="#6366f1" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            )}
+          </ResponsiveContainer>
+        </ChartScroller>
       </div>
     </ChartEntrance>
   );

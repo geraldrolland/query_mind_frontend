@@ -138,26 +138,28 @@ export default function AssistantPage() {
   }
 
   return (
-    <div className="flex h-screen flex-col">
-      <header className="flex items-center justify-between border-b border-slate-800 px-6 py-4">
-        <div>
+    <div className="flex h-[calc(100dvh-3.5rem)] flex-col lg:h-dvh">
+      <header className="flex items-center justify-between gap-3 border-b border-slate-800 px-4 py-4 sm:px-6">
+        <div className="min-w-0">
           <Link
             href={`/dashboard/datasets/${datasetId}`}
             className="mb-0.5 flex items-center gap-1 text-xs text-slate-400 hover:text-white"
           >
-            <ArrowLeft className="h-3 w-3" /> {dataset?.name || "Dataset"}
+            <ArrowLeft className="h-3 w-3" /> Datasets
           </Link>
-          <h1 className="flex items-center gap-2 text-lg font-bold">
-            <Sparkles className="h-4 w-4 text-indigo-400" />
-            AI Assistant
+          <h1 className="flex min-w-0 items-center gap-2 text-lg font-bold">
+            <Sparkles className="h-4 w-4 shrink-0 text-indigo-400" />
+            <span className="truncate">
+              {dataset?.name ? `${dataset.name} — AI Assistant` : "AI Assistant"}
+            </span>
           </h1>
         </div>
-        <span className="rounded-full border border-slate-800 px-3 py-1 text-xs text-slate-400">
+        <span className="shrink-0 rounded-full border border-slate-800 px-3 py-1 text-xs text-slate-400">
           {dataset?.total_rows.toLocaleString()} rows
         </span>
       </header>
 
-      <div ref={scrollRef} className="flex-1 space-y-5 overflow-y-auto px-6 py-6">
+      <div ref={scrollRef} className="flex-1 space-y-5 overflow-y-auto px-4 py-6 sm:px-6">
         {messages.length === 0 && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -208,7 +210,7 @@ export default function AssistantPage() {
             }`}
           >
             <div
-              className={`max-w-[85%] rounded-2xl px-4 py-3 ${
+              className={`max-w-[92%] rounded-2xl px-4 py-3 sm:max-w-[85%] ${
                 m.role === "user"
                   ? "bg-indigo-500 text-white"
                   : m.is_error
@@ -266,7 +268,7 @@ export default function AssistantPage() {
         </AnimatePresence>
       </div>
 
-      <form onSubmit={onSubmit} className="border-t border-slate-800 px-6 py-4">
+      <form onSubmit={onSubmit} className="border-t border-slate-800 px-4 py-4 sm:px-6">
         <div className="mx-auto flex max-w-3xl items-end gap-3">
           <textarea
             value={input}

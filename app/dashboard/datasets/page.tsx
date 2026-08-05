@@ -102,8 +102,8 @@ export default function DatasetsPage() {
   const [modalOpen, setModalOpen] = useState(false);
 
   return (
-    <div className="p-8">
-      <FadeIn className="mb-8 flex items-center justify-between">
+    <div className="p-4 sm:p-6 lg:p-8">
+      <FadeIn className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold">Datasets</h1>
           <p className="text-sm text-slate-400">
@@ -114,7 +114,7 @@ export default function DatasetsPage() {
           whileHover={{ scale: 1.03 }}
           whileTap={{ scale: 0.97 }}
           onClick={() => setModalOpen(true)}
-          className="flex items-center gap-2 rounded-lg bg-indigo-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-400"
+          className="flex w-full items-center justify-center gap-2 rounded-lg bg-indigo-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-400 sm:w-auto"
         >
           <Plus className="h-4 w-4" />
           Upload dataset

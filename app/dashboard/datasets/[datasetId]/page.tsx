@@ -105,8 +105,8 @@ export default function DatasetDetailPage() {
 
   if (loading && !dataset) {
     return (
-      <div className="p-8">
-        <div className="mb-6 h-8 w-1/3 animate-pulse rounded bg-slate-800" />
+      <div className="p-4 sm:p-6 lg:p-8">
+        <div className="mb-6 h-8 w-1/2 animate-pulse rounded bg-slate-800 sm:w-1/3" />
         <div className="grid gap-6 lg:grid-cols-3">
           <div className="space-y-6 lg:col-span-2">
             <div className="h-64 animate-pulse rounded-xl border border-slate-800 bg-slate-900/60" />
@@ -121,7 +121,7 @@ export default function DatasetDetailPage() {
   }
   if (error) {
     return (
-      <div className="p-8">
+      <div className="p-4 sm:p-6 lg:p-8">
         <div className="rounded-lg border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-300">
           {error}
         </div>
@@ -132,22 +132,22 @@ export default function DatasetDetailPage() {
   const columns = records?.records.length ? Object.keys(records.records[0].data) : schema ? Object.keys(schema) : [];
 
   return (
-    <div className="p-8">
-      <FadeIn className="mb-6 flex items-start justify-between">
-        <div>
+    <div className="p-4 sm:p-6 lg:p-8">
+      <FadeIn className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
           <Link
             href="/dashboard/datasets"
             className="mb-2 flex items-center gap-1 text-sm text-slate-400 hover:text-white"
           >
             <ArrowLeft className="h-4 w-4" /> Datasets
           </Link>
-          <h1 className="text-2xl font-bold">{dataset?.name}</h1>
+          <h1 className="truncate text-2xl font-bold">{dataset?.name}</h1>
           <p className="text-sm text-slate-400">
             {dataset?.total_rows.toLocaleString()} rows · created{" "}
             {dataset ? new Date(dataset.created_at).toLocaleDateString() : ""}
           </p>
         </div>
-        <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
+        <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} className="self-start sm:self-auto">
           <Link
             href={`/dashboard/datasets/${datasetId}/assistant`}
             className="flex items-center gap-2 rounded-lg bg-indigo-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-400"
