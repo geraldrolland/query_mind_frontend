@@ -77,7 +77,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // A session may exist (e.g. after the OAuth exchange, or a stale guard
       // bounce) even though the mount-time check failed. Re-verify so auth
       // pages self-heal: a valid session here redirects to the dashboard.
-      refresh();
+      const timer = setTimeout(() => {
+        void refresh();
+      }, 0);
+      return () => clearTimeout(timer);
     }
   }, [status, pathname, router, refresh]);
 
@@ -118,7 +121,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       setUser(null);
       setStatus("anonymous");
-      router.push("/");
+      router.push("/signin");
     }
   }, [router]);
 
