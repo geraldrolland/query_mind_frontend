@@ -11,17 +11,21 @@ import {
   LineChart,
   Pie,
   PieChart,
-  ResponsiveContainer,
-  Tooltip,
   XAxis,
   YAxis,
 } from "recharts";
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  type ChartConfig,
+} from "@/components/ui/chart";
 import { datasetApi } from "@/lib/api/datasets";
 import { Loader2 } from "lucide-react";
 
 type Row = Record<string, unknown>;
 
-const PALETTE = ["#6366f1", "#22d3ee", "#a78bfa", "#34d399", "#f472b6", "#fbbf24"];
+const colorFor = (i: number) => `var(--color-chart-${(i % 5) + 1})`;
 
 function ChartEntrance({ children }: { children: React.ReactNode }) {
   return (
@@ -38,7 +42,7 @@ function ChartEntrance({ children }: { children: React.ReactNode }) {
 function ChartScroller({ children }: { children: React.ReactNode }) {
   return (
     <div className="overflow-x-auto">
-      <div className="h-64 min-w-[300px] w-full">{children}</div>
+      <div className="w-full">{children}</div>
     </div>
   );
 }
@@ -162,24 +166,28 @@ export function RecordBlock({ datasetId, dsl, chartType }: RecordBlockProps) {
   }
 
   if (chartType === "piechart") {
-    const data = rows.map((row, i) => ({
+    const pieData = rows.map((row, i) => ({
       name: String(row[labelKey] ?? `#${i}`),
       value: Number(row[valueKey]) || 0,
+      fill: colorFor(i),
     }));
+    const pieConfig: ChartConfig = Object.fromEntries(
+      pieData.map((d) => [d.name, { label: d.name, color: d.fill }])
+    );
     return (
       <ChartEntrance>
         <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-2">
           <ChartScroller>
-            <ResponsiveContainer width="100%" height="100%">
+            <ChartContainer config={pieConfig} className="h-64 min-w-[300px]">
               <PieChart>
-                <Pie data={data} dataKey="value" nameKey="name" innerRadius="45%" outerRadius="80%" paddingAngle={2}>
-                  {data.map((_, i) => (
-                    <Cell key={i} fill={PALETTE[i % PALETTE.length]} />
+                <Pie data={pieData} dataKey="value" nameKey="name" innerRadius="45%" outerRadius="80%" paddingAngle={2}>
+                  {pieData.map((d, i) => (
+                    <Cell key={i} fill={d.fill} />
                   ))}
                 </Pie>
-                <Tooltip contentStyle={{ background: "#0f172a", border: "1px solid #334155", borderRadius: 8, fontSize: 12 }} />
+                <ChartTooltip content={<ChartTooltipContent hideLabel />} />
               </PieChart>
-            </ResponsiveContainer>
+            </ChartContainer>
           </ChartScroller>
         </div>
       </ChartEntrance>
@@ -191,34 +199,33 @@ export function RecordBlock({ datasetId, dsl, chartType }: RecordBlockProps) {
     label: String(row[labelKey] ?? ""),
     value: Number(row[valueKey]) || 0,
   }));
+  const seriesConfig: ChartConfig = {
+    value: { label: valueKey, color: "var(--color-chart-1)" },
+  };
 
   return (
     <ChartEntrance>
       <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-2">
         <ChartScroller>
-          <ResponsiveContainer width="100%" height="100%">
+          <ChartContainer config={seriesConfig} className="h-64 min-w-[300px]">
             {isLine ? (
               <LineChart data={data}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
                 <XAxis dataKey="label" stroke="#64748b" fontSize={11} tickLine={false} />
                 <YAxis stroke="#64748b" fontSize={11} tickLine={false} />
-                <Tooltip
-                  contentStyle={{ background: "#0f172a", border: "1px solid #334155", borderRadius: 8, fontSize: 12 }}
-                />
-                <Line type="monotone" dataKey="value" stroke="#6366f1" strokeWidth={2} dot={{ r: 3, fill: "#22d3ee" }} />
+                <ChartTooltip content={<ChartTooltipContent hideLabel />} />
+                <Line type="monotone" dataKey="value" stroke="var(--color-chart-1)" strokeWidth={2} dot={{ r: 3, fill: "var(--color-chart-2)" }} />
               </LineChart>
             ) : (
               <BarChart data={data}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
                 <XAxis dataKey="label" stroke="#64748b" fontSize={11} tickLine={false} />
                 <YAxis stroke="#64748b" fontSize={11} tickLine={false} />
-                <Tooltip
-                  contentStyle={{ background: "#0f172a", border: "1px solid #334155", borderRadius: 8, fontSize: 12 }}
-                />
-                <Bar dataKey="value" fill="#6366f1" radius={[4, 4, 0, 0]} />
+                <ChartTooltip content={<ChartTooltipContent hideLabel />} />
+                <Bar dataKey="value" fill="var(--color-chart-1)" radius={[4, 4, 0, 0]} />
               </BarChart>
             )}
-          </ResponsiveContainer>
+          </ChartContainer>
         </ChartScroller>
       </div>
     </ChartEntrance>

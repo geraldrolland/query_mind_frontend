@@ -11,11 +11,15 @@ import {
   LineChart,
   Pie,
   PieChart,
-  ResponsiveContainer,
-  Tooltip,
   XAxis,
   YAxis,
 } from "recharts";
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  type ChartConfig,
+} from "@/components/ui/chart";
 import {
   Database,
   Loader2,
@@ -29,17 +33,10 @@ import {
 } from "lucide-react";
 import { DEMO_DATASETS, DEMO_PROGRESS, DEMO_QUESTIONS } from "./demo-data";
 
-const PALETTE = ["#6366f1", "#22d3ee", "#a78bfa", "#34d399", "#f472b6", "#fbbf24"];
+const colorFor = (i: number) => `var(--color-chart-${(i % 5) + 1})`;
 
 type View = "grid" | "chat";
 type Sub = "type" | "think" | "answer";
-
-const tooltipStyle = {
-  background: "#0f172a",
-  border: "1px solid #334155",
-  borderRadius: 8,
-  fontSize: 12,
-};
 
 function DemoChart({ type, rows }: { type: string; rows: Record<string, unknown>[] }) {
   const keys = rows.length ? Object.keys(rows[0]) : [];
@@ -47,23 +44,25 @@ function DemoChart({ type, rows }: { type: string; rows: Record<string, unknown>
   const valueKey = keys.find((k) => typeof rows[0][k] === "number") ?? keys[1];
 
   if (type === "pie") {
-    const data = rows.map((row) => ({
+    const data = rows.map((row, i) => ({
       name: String(row[labelKey]),
       value: Number(row[valueKey]) || 0,
+      fill: colorFor(i),
     }));
+    const config: ChartConfig = Object.fromEntries(
+      data.map((d) => [d.name, { label: d.name, color: d.fill }])
+    );
     return (
-      <div className="h-44 w-full">
-        <ResponsiveContainer width="100%" height="100%">
-          <PieChart>
-            <Pie data={data} dataKey="value" nameKey="name" innerRadius="50%" outerRadius="80%" paddingAngle={2}>
-              {data.map((_, i) => (
-                <Cell key={i} fill={PALETTE[i % PALETTE.length]} />
-              ))}
-            </Pie>
-            <Tooltip contentStyle={tooltipStyle} />
-          </PieChart>
-        </ResponsiveContainer>
-      </div>
+      <ChartContainer config={config} className="h-44 w-full">
+        <PieChart>
+          <Pie data={data} dataKey="value" nameKey="name" innerRadius="50%" outerRadius="80%" paddingAngle={2}>
+            {data.map((_, i) => (
+              <Cell key={i} fill={colorFor(i)} />
+            ))}
+          </Pie>
+          <ChartTooltip content={<ChartTooltipContent hideLabel />} />
+        </PieChart>
+      </ChartContainer>
     );
   }
 
@@ -71,29 +70,30 @@ function DemoChart({ type, rows }: { type: string; rows: Record<string, unknown>
     label: String(row[labelKey] ?? ""),
     value: Number(row[valueKey]) || 0,
   }));
+  const config: ChartConfig = {
+    value: { label: valueKey, color: "var(--color-chart-1)" },
+  };
 
   return (
-    <div className="h-44 w-full">
-      <ResponsiveContainer width="100%" height="100%">
-        {type === "line" ? (
-          <LineChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-            <XAxis dataKey="label" stroke="#64748b" fontSize={10} tickLine={false} interval="preserveStartEnd" />
-            <YAxis stroke="#64748b" fontSize={10} tickLine={false} width={44} />
-            <Tooltip contentStyle={tooltipStyle} />
-            <Line type="monotone" dataKey="value" stroke="#6366f1" strokeWidth={2} dot={{ r: 3, fill: "#22d3ee" }} />
-          </LineChart>
-        ) : (
-          <BarChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-            <XAxis dataKey="label" stroke="#64748b" fontSize={10} tickLine={false} />
-            <YAxis stroke="#64748b" fontSize={10} tickLine={false} width={44} />
-            <Tooltip contentStyle={tooltipStyle} />
-            <Bar dataKey="value" fill="#6366f1" radius={[4, 4, 0, 0]} />
-          </BarChart>
-        )}
-      </ResponsiveContainer>
-    </div>
+    <ChartContainer config={config} className="h-44 w-full">
+      {type === "line" ? (
+        <LineChart data={data}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
+          <XAxis dataKey="label" stroke="#64748b" fontSize={10} tickLine={false} interval="preserveStartEnd" />
+          <YAxis stroke="#64748b" fontSize={10} tickLine={false} width={44} />
+          <ChartTooltip content={<ChartTooltipContent hideLabel />} />
+          <Line type="monotone" dataKey="value" stroke="var(--color-chart-1)" strokeWidth={2} dot={{ r: 3, fill: "var(--color-chart-2)" }} />
+        </LineChart>
+      ) : (
+        <BarChart data={data}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
+          <XAxis dataKey="label" stroke="#64748b" fontSize={10} tickLine={false} />
+          <YAxis stroke="#64748b" fontSize={10} tickLine={false} width={44} />
+          <ChartTooltip content={<ChartTooltipContent hideLabel />} />
+          <Bar dataKey="value" fill="var(--color-chart-1)" radius={[4, 4, 0, 0]} />
+        </BarChart>
+      )}
+    </ChartContainer>
   );
 }
 
