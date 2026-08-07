@@ -112,7 +112,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const email = user?.email ?? "";
 
   return (
-    <div className="flex min-h-dvh bg-slate-950 text-slate-100">
+    <div className="flex min-h-dvh flex-col bg-slate-950 text-slate-100 lg:flex-row">
       <motion.aside
         initial={{ x: -48, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
@@ -123,22 +123,24 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </motion.aside>
 
       {/* Mobile top bar */}
-      <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center justify-between border-b border-slate-800 bg-slate-900/80 px-4 backdrop-blur lg:hidden">
-        <Link href="/dashboard/datasets" className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-500">
-            <Sparkles className="h-4 w-4 text-white" />
-          </div>
-          <span className="text-base font-bold tracking-tight">QueryMind</span>
-        </Link>
-        <motion.button
-          whileTap={{ scale: 0.9 }}
-          onClick={() => setMobileNavOpen((v) => !v)}
-          aria-label={mobileNavOpen ? "Close navigation" : "Open navigation"}
-          className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-800 text-slate-300 hover:bg-slate-800"
-        >
-          {mobileNavOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-        </motion.button>
-      </header>
+      {!pathname.includes("/assistant") && (
+        <header className="sticky top-0 z-30 flex h-14 w-full shrink-0 items-center justify-between border-b border-slate-800 bg-slate-900/80 px-4 backdrop-blur lg:hidden">
+          <Link href="/dashboard/datasets" className="flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-500">
+              <Sparkles className="h-4 w-4 text-white" />
+            </div>
+            <span className="text-base font-bold tracking-tight">QueryMind</span>
+          </Link>
+          <motion.button
+            whileTap={{ scale: 0.9 }}
+            onClick={() => setMobileNavOpen((v) => !v)}
+            aria-label={mobileNavOpen ? "Close navigation" : "Open navigation"}
+            className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-800 text-slate-300 hover:bg-slate-800"
+          >
+            {mobileNavOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </motion.button>
+        </header>
+      )}
 
       {/* Mobile drawer */}
       <AnimatePresence>

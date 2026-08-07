@@ -17,7 +17,7 @@ function SchemaTable({ schema }: { schema: Record<string, { type: string; allowe
       <table className="w-full text-left text-sm">
         <thead className="bg-slate-900 text-xs uppercase text-slate-400">
           <tr>
-            <th className="px-4 py-3">Column</th>
+            <th className="sticky left-0 z-10 bg-slate-900 px-4 py-3">Column</th>
             <th className="px-4 py-3">Type</th>
             <th className="px-4 py-3">Operators</th>
           </tr>
@@ -25,7 +25,7 @@ function SchemaTable({ schema }: { schema: Record<string, { type: string; allowe
         <tbody className="divide-y divide-slate-800">
           {Object.entries(schema).map(([name, rule]) => (
             <tr key={name} className="bg-slate-900/40">
-              <td className="px-4 py-2.5 font-medium text-slate-200">{name}</td>
+              <td className="sticky left-0 z-10 border-r border-slate-800 bg-slate-900 px-4 py-2.5 font-medium text-slate-200">{name}</td>
               <td className="px-4 py-2.5">
                 <span className="rounded-full bg-indigo-500/15 px-2.5 py-0.5 text-xs text-indigo-300">
                   {rule.type}
@@ -107,7 +107,7 @@ export default function DatasetDetailPage() {
     return (
       <div className="p-4 sm:p-6 lg:p-8">
         <div className="mb-6 h-8 w-1/2 animate-pulse rounded bg-slate-800 sm:w-1/3" />
-        <div className="grid gap-6 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           <div className="space-y-6 lg:col-span-2">
             <div className="h-64 animate-pulse rounded-xl border border-slate-800 bg-slate-900/60" />
           </div>
@@ -158,7 +158,7 @@ export default function DatasetDetailPage() {
         </motion.div>
       </FadeIn>
 
-      <Stagger className="grid gap-6 lg:grid-cols-3" amount={0.05}>
+      <Stagger className="grid grid-cols-1 gap-6 lg:grid-cols-3" amount={0.05}>
         <div className="space-y-6 lg:col-span-2">
           {cleaningReport && (
             <StaggerItem>
@@ -174,8 +174,11 @@ export default function DatasetDetailPage() {
               <table className="w-full text-left text-sm">
                 <thead className="bg-slate-900 text-xs uppercase text-slate-400">
                   <tr>
-                    {columns.map((col) => (
-                      <th key={col} className="px-3 py-3">
+                    {columns.map((col, i) => (
+                      <th
+                        key={col}
+                        className={`px-3 py-3 ${i === 0 ? "sticky left-0 z-10 bg-slate-900" : ""}`}
+                      >
                         {col}
                       </th>
                     ))}
@@ -190,8 +193,13 @@ export default function DatasetDetailPage() {
                       transition={{ delay: 0.05 + ri * 0.04, duration: 0.3 }}
                       className="bg-slate-900/40"
                     >
-                      {columns.map((col) => (
-                        <td key={col} className="max-w-48 truncate px-3 py-2 text-slate-300">
+                      {columns.map((col, ci) => (
+                        <td
+                          key={col}
+                          className={`max-w-48 truncate px-3 py-2 text-slate-300 ${
+                            ci === 0 ? "sticky left-0 z-10 border-r border-slate-800 bg-slate-900" : ""
+                          }`}
+                        >
                           {row.data[col] == null ? <span className="text-slate-600">∅</span> : String(row.data[col])}
                         </td>
                       ))}
@@ -201,8 +209,8 @@ export default function DatasetDetailPage() {
               </table>
             </div>
             {records && records.total > 0 && (
-              <div className="mt-3 flex items-center justify-between text-sm text-slate-400">
-                <span>
+              <div className="mt-3 flex flex-col gap-3 text-sm text-slate-400 sm:flex-row sm:items-center sm:justify-between">
+                <span className="text-center sm:text-left">
                   Page {records.page} of {Math.max(1, Math.ceil(records.total / records.page_size))}
                   {" "}· {records.total.toLocaleString()} rows total
                 </span>
@@ -211,7 +219,7 @@ export default function DatasetDetailPage() {
                     whileTap={{ scale: 0.95 }}
                     onClick={() => setPage((p) => Math.max(1, p - 1))}
                     disabled={page <= 1}
-                    className="rounded bg-slate-800 px-3 py-1.5 text-xs disabled:opacity-40"
+                    className="flex-1 rounded bg-slate-800 px-3 py-1.5 text-xs disabled:opacity-40 sm:flex-none"
                   >
                     Prev
                   </motion.button>
@@ -219,7 +227,7 @@ export default function DatasetDetailPage() {
                     whileTap={{ scale: 0.95 }}
                     onClick={() => setPage((p) => p + 1)}
                     disabled={page * 20 >= records.total}
-                    className="rounded bg-slate-800 px-3 py-1.5 text-xs disabled:opacity-40"
+                    className="flex-1 rounded bg-slate-800 px-3 py-1.5 text-xs disabled:opacity-40 sm:flex-none"
                   >
                     Next
                   </motion.button>

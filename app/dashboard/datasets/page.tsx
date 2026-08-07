@@ -72,7 +72,7 @@ function DatasetCard({
       {dataset.description && (
         <p className="mb-2 line-clamp-2 text-sm text-slate-400">{dataset.description}</p>
       )}
-      <div className="mb-4 mt-auto flex items-center gap-4 text-xs text-slate-500">
+      <div className="mb-4 mt-auto flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500">
         <span>{dataset.total_rows.toLocaleString()} rows</span>
         <span>{formatBytes(dataset.total_size_bytes)}</span>
         <span>{new Date(dataset.created_at).toLocaleDateString()}</span>
@@ -128,7 +128,7 @@ export default function DatasetsPage() {
       )}
 
       {loading ? (
-        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {[1, 2, 3].map((i) => (
             <div
               key={i}
@@ -167,7 +167,7 @@ export default function DatasetsPage() {
           </motion.button>
         </motion.div>
       ) : (
-        <Stagger className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <Stagger className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {datasets.map((d) => (
             <StaggerItem key={d.id} className="h-full">
               <DatasetCard dataset={d} onDelete={(id) => remove(id)} />

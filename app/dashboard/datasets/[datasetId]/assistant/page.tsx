@@ -138,7 +138,7 @@ export default function AssistantPage() {
   }
 
   return (
-    <div className="flex h-[calc(100dvh-3.5rem)] flex-col lg:h-dvh">
+    <div className="flex h-dvh flex-col">
       <header className="flex items-center justify-between gap-3 border-b border-slate-800 px-4 py-4 sm:px-6">
         <div className="min-w-0">
           <Link
