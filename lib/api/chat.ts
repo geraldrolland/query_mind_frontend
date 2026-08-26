@@ -1,7 +1,14 @@
 import type { ChatEvent, ChatMessage } from "@/lib/types";
-import { refreshSession } from "@/lib/api/client";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
+function wsBaseUrl(): string {
+  return API_URL.replace(/^https:/, "wss:").replace(/^http:/, "ws:");
+}
+
+export function wsUrl(datasetId: string): string {
+  return `${wsBaseUrl()}/api/v1/chat/${datasetId}/query`;
+}
 
 function parseEventData(raw: string): Record<string, unknown> | null {
   const trimmed = raw.trim();
@@ -13,137 +20,91 @@ function parseEventData(raw: string): Record<string, unknown> | null {
   }
 }
 
-export interface ChatStreamHandlers {
+export type ResumeReply =
+  | { kind: "progress"; status: string }
+  | { kind: "done" };
+
+export interface ChatSocketHandlers {
   onEvent: (event: ChatEvent) => void;
-  onError: (message: string) => void;
   onDone: () => void;
+  onError: (message: string) => void;
+  onResumeReply: (reply: ResumeReply) => void;
+  onOpen?: () => void;
 }
 
-export async function streamChat(
+export function createChatSocket(
   datasetId: string,
-  message: string,
-  history: { role: "user" | "assistant"; content: string }[],
-  handlers: ChatStreamHandlers
-): Promise<void> {
-  const controller = new AbortController();
+  handlers: ChatSocketHandlers
+): WebSocket {
+  const socket = new WebSocket(wsUrl(datasetId));
+  let resumePending = true;
 
-  async function postChat(): Promise<Response> {
-    return fetch(`${API_URL}/api/v1/chat/${datasetId}/query`, {
-      method: "POST",
-      credentials: "include",
-      signal: controller.signal,
-      headers: {
-        "Content-Type": "application/json",
-        "x-csrf-token": document.cookie
-          .split("; ")
-          .find((c) => c.startsWith("csrf_token="))
-          ?.split("=").slice(1).join("=") || "",
-      },
-      body: JSON.stringify({ message, history }),
-    });
-  }
-
-  let resp: Response;
-  try {
-    resp = await postChat();
-  } catch {
-    handlers.onError("Could not reach the AI assistant. Check your connection and try again.");
-    handlers.onDone();
-    return;
-  }
-
-  if (resp.status === 401) {
-    const refreshed = await refreshSession();
-    if (refreshed) {
-      try {
-        resp = await postChat();
-      } catch {
-        handlers.onError("Could not reach the AI assistant. Check your connection and try again.");
+  const dispatchData = (data: unknown) => {
+    const parsed = parseEventData(String(data ?? ""));
+    if (!parsed) return;
+    try {
+      if (parsed.error) {
+        handlers.onEvent({ event: "error", data: { message: String(parsed.error) } });
+      } else if (parsed.done) {
         handlers.onDone();
-        return;
-      }
-    } else {
-      handlers.onError("Your session expired. Please log in again.");
-      handlers.onDone();
-      return;
-    }
-  }
-
-  if (!resp.ok || !resp.body) {
-    let detail = `Request failed (${resp.status})`;
-    try {
-      const body = await resp.json();
-      if (body?.detail) detail = body.detail;
-    } catch {
-      /* ignore */
-    }
-    handlers.onError(detail);
-    handlers.onDone();
-    return;
-  }
-
-  const reader = resp.body.getReader();
-  const decoder = new TextDecoder();
-  let buffer = "";
-
-  const handleLine = (line: string) => {
-    const data = parseEventData(line);
-    if (!data) return;
-
-    try {
-      if (data.error) {
-        handlers.onEvent({ event: "error", data: { message: String(data.error) } });
-      } else if (data.done) {
-        handlers.onEvent({ event: "done", data: {} });
-      } else if (typeof data.progress === "string") {
-        handlers.onEvent({ event: "progress", data: { status: data.progress } });
-      } else if (typeof data.delta === "string") {
-        handlers.onEvent({ event: "delta", data: { content: data.delta } });
+      } else if (parsed.pong === 1) {
+        return; // liveness heartbeat
+      } else if (typeof parsed.progress === "string") {
+        handlers.onEvent({ event: "progress", data: { status: parsed.progress } });
+      } else if (typeof parsed.delta === "string") {
+        handlers.onEvent({ event: "delta", data: { content: parsed.delta } });
       } else {
-        handlers.onEvent({
-          event: "message",
-          data: {
-            id: String(data.id ?? ""),
-            role: String(data.role ?? "assistant"),
-            type: String(data.type ?? "text"),
-            chart_type: data.chart_type ? String(data.chart_type) : undefined,
-            is_error: Boolean(data.is_error),
-            content: data.content ?? "",
-          },
-        });
+        const msgData = {
+          id: String(parsed.id ?? ""),
+          role: String(parsed.role ?? "assistant"),
+          type: String(parsed.type ?? "text"),
+          chart_type: parsed.chart_type ? String(parsed.chart_type) : undefined,
+          is_error: Boolean(parsed.is_error),
+          content: parsed.content ?? "",
+        };
+        console.log("[chat] dispatch message:", msgData.id, "content-len:", String(msgData.content).length);
+        handlers.onEvent({ event: "message", data: msgData });
       }
-    } catch (eventErr) {
+    } catch {
       handlers.onError(
-        data.error
-          ? String(data.error)
+        parsed.error
+          ? String(parsed.error)
           : "The AI assistant returned an unreadable response. Try again."
       );
     }
   };
 
-  try {
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      buffer += decoder.decode(value, { stream: true });
+  socket.onopen = () => {
+    handlers.onOpen?.();
+  };
 
-      let boundary: number;
-      while ((boundary = buffer.indexOf("\n")) !== -1) {
-        const line = buffer.slice(0, boundary);
-        buffer = buffer.slice(boundary + 1);
-        if (!line.trim()) continue;
-        handleLine(line);
+  socket.onmessage = (event) => {
+    const raw = String(event.data ?? "");
+    console.log("[chat] frame:", raw.slice(0, 200));
+    const parsed = parseEventData(raw);
+    if (!parsed) return;
+    if (resumePending) {
+      if (parsed.pong === 1) return; // keep waiting for the resume state
+      resumePending = false;
+      if (parsed.done) {
+        handlers.onResumeReply({ kind: "done" });
+        return;
       }
+      if (typeof parsed.progress === "string") {
+        handlers.onResumeReply({ kind: "progress", status: parsed.progress });
+        return;
+      }
+      dispatchData(parsed);
+      return;
     }
+    dispatchData(parsed);
+  };
 
-    if (buffer.trim()) {
-      handleLine(buffer);
-      buffer = "";
-    }
-  } finally {
-    controller.abort();
-    handlers.onDone();
-  }
+  socket.onerror = () => {
+    /* close handler reports the failure */
+  };
+
+  return socket;
 }
 
 export function messageToHistory(messages: ChatMessage[]): { role: "user" | "assistant"; content: string }[] {

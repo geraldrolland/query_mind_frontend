@@ -79,7 +79,7 @@ function DemoChart({ type, rows }: { type: string; rows: Record<string, unknown>
       {type === "line" ? (
         <LineChart data={data}>
           <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-          <XAxis dataKey="label" stroke="#64748b" fontSize={10} tickLine={false} interval="preserveStartEnd" />
+          <XAxis dataKey="label" stroke="#64748b" fontSize={10} tickLine={false} interval={0} />
           <YAxis stroke="#64748b" fontSize={10} tickLine={false} width={44} />
           <ChartTooltip content={<ChartTooltipContent hideLabel />} />
           <Line type="monotone" dataKey="value" stroke="var(--color-chart-1)" strokeWidth={2} dot={{ r: 3, fill: "var(--color-chart-2)" }} />
@@ -87,7 +87,7 @@ function DemoChart({ type, rows }: { type: string; rows: Record<string, unknown>
       ) : (
         <BarChart data={data}>
           <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-          <XAxis dataKey="label" stroke="#64748b" fontSize={10} tickLine={false} />
+          <XAxis dataKey="label" stroke="#64748b" fontSize={10} tickLine={false} interval={0} />
           <YAxis stroke="#64748b" fontSize={10} tickLine={false} width={44} />
           <ChartTooltip content={<ChartTooltipContent hideLabel />} />
           <Bar dataKey="value" fill="var(--color-chart-1)" radius={[4, 4, 0, 0]} />
