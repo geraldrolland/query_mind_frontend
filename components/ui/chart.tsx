@@ -173,7 +173,7 @@ function ChartTooltipContent({
 
     return <div className={cn("font-medium", labelClassName)}>{value}</div>
   }, [
-    label,
+    label,  
     labelFormatter,
     payload,
     hideLabel,

@@ -90,6 +90,7 @@ export interface ChatMessage {
   record?: Record<string, unknown>;
   error?: string;
   is_error?: boolean;
+  status?: "queued" | "pending" | "sent" | "failed";
 }
 
 export interface DatasetMessage {

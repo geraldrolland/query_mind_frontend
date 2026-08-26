@@ -2,30 +2,20 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Cell,
-  Line,
-  LineChart,
-  Pie,
-  PieChart,
-  XAxis,
-  YAxis,
-} from "recharts";
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-  type ChartConfig,
-} from "@/components/ui/chart";
+
 import { datasetApi } from "@/lib/api/datasets";
 import { Loader2 } from "lucide-react";
+import MetricChart from "./charts/metric-chart";
+import TableChart from "./charts/table-chart";
+import PieChart from "./charts/pie-chart";
+import BarChart from "./charts/bar-chart";
+import LineChart from "./charts/line-chart";
 
 type Row = Record<string, unknown>;
 
 const colorFor = (i: number) => `var(--color-chart-${(i % 5) + 1})`;
+
+
 
 function ChartEntrance({ children }: { children: React.ReactNode }) {
   return (
@@ -96,10 +86,7 @@ export function RecordBlock({ datasetId, dsl, chartType }: RecordBlockProps) {
     return { labelKey: label ?? keys[0], valueKey: numeric[0] ?? keys[keys.length - 1] };
   }, [keys, rows]);
 
-  const formatValue = (v: unknown): string => {
-    if (typeof v === "number") return v.toLocaleString();
-    return String(v ?? "");
-  };
+
 
   if (error) {
     return (
@@ -130,10 +117,7 @@ export function RecordBlock({ datasetId, dsl, chartType }: RecordBlockProps) {
     const value = rows[0]?.[valueKey];
     return (
       <ChartEntrance>
-        <div className="rounded-xl border border-slate-800 bg-slate-950/60 px-5 py-4">
-          <p className="text-xs text-slate-400 truncate">{labelKey}: {valueKey}</p>
-          <p className="mt-1 text-2xl font-bold text-indigo-300">{formatValue(value)}</p>
-        </div>
+        <MetricChart valueKey={valueKey} labelKey={labelKey} value={value} />
       </ChartEntrance>
     );
   }
@@ -141,93 +125,44 @@ export function RecordBlock({ datasetId, dsl, chartType }: RecordBlockProps) {
   if (chartType === "tablechart") {
     return (
       <ChartEntrance>
-        <div className="max-h-72 overflow-auto rounded-xl border border-slate-800 bg-slate-950/60">
-          <table className="w-full text-left text-xs">
-            <thead className="sticky top-0 bg-slate-900 text-slate-400">
-              <tr>
-                {keys.map((k) => (
-                  <th key={k} className="px-3 py-2 font-medium">{k}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((row, i) => (
-                <tr key={i} className="border-t border-slate-800/70">
-                  {keys.map((k) => (
-                    <td key={k} className="px-3 py-2 text-slate-200">{formatValue(row[k])}</td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <TableChart dsl={dsl} rows={rows} labelKey={labelKey} keys={keys} />
       </ChartEntrance>
     );
   }
 
   if (chartType === "piechart") {
-    const pieData = rows.map((row, i) => ({
-      name: String(row[labelKey] ?? `#${i}`),
-      value: Number(row[valueKey]) || 0,
-      fill: colorFor(i),
-    }));
-    const pieConfig: ChartConfig = Object.fromEntries(
-      pieData.map((d) => [d.name, { label: d.name, color: d.fill }])
-    );
     return (
       <ChartEntrance>
         <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-2">
           <ChartScroller>
-            <ChartContainer config={pieConfig} className="h-64 min-w-[300px]">
-              <PieChart>
-                <Pie data={pieData} dataKey="value" nameKey="name" innerRadius="45%" outerRadius="80%" paddingAngle={2}>
-                  {pieData.map((d, i) => (
-                    <Cell key={i} fill={d.fill} />
-                  ))}
-                </Pie>
-                <ChartTooltip content={<ChartTooltipContent hideLabel />} />
-              </PieChart>
-            </ChartContainer>
+            <PieChart rows={rows} labelKey={labelKey} valueKey={valueKey} colorFor={colorFor} />
           </ChartScroller>
         </div>
       </ChartEntrance>
     );
   }
 
-  const isLine = chartType === "linechart";
-  const data = rows.map((row: Row) => ({
-    label: String(row[labelKey] ?? ""),
-    value: Number(row[valueKey]) || 0,
-  }));
-  const seriesConfig: ChartConfig = {
-    value: { label: valueKey, color: "var(--color-chart-1)" },
-  };
+  if (chartType === "linechart") {
+    return (
+      <ChartEntrance>
+        <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-2">
+          <ChartScroller>
+            <LineChart rows={rows} valueKey={valueKey} labelKey={labelKey} dsl={dsl} />
+          </ChartScroller>
+        </div>
+      </ChartEntrance>
+    );
+  }
 
-  return (
-    <ChartEntrance>
-      <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-2">
-        <ChartScroller>
-          <ChartContainer config={seriesConfig} className="h-64 min-w-[300px]">
-            {isLine ? (
-              <LineChart data={data}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-                <XAxis dataKey="label" stroke="#64748b" fontSize={11} tickLine={false} />
-                <YAxis stroke="#64748b" fontSize={11} tickLine={false} />
-                <ChartTooltip content={<ChartTooltipContent hideLabel />} />
-                <Line type="monotone" dataKey="value" stroke="var(--color-chart-1)" strokeWidth={2} dot={{ r: 3, fill: "var(--color-chart-2)" }} />
-              </LineChart>
-            ) : (
-              <BarChart data={data}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-                <XAxis dataKey="label" stroke="#64748b" fontSize={11} tickLine={false} />
-                <YAxis stroke="#64748b" fontSize={11} tickLine={false} />
-                <ChartTooltip content={<ChartTooltipContent hideLabel />} />
-                <Bar dataKey="value" fill="var(--color-chart-1)" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            )}
-          </ChartContainer>
-        </ChartScroller>
-      </div>
-    </ChartEntrance>
-  );
+  else {
+    return (
+      <ChartEntrance>
+        <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-2">
+          <ChartScroller>
+            <BarChart rows={rows} valueKey={valueKey} labelKey={labelKey} dsl={dsl} />
+          </ChartScroller>
+        </div>
+      </ChartEntrance>
+    );
+  }
 }
