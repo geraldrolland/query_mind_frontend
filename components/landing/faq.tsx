@@ -29,7 +29,7 @@ const FAQS = [
   },
   {
     q: "Is my data secure?",
-    a: "Yes. Sessions use HTTP-only cookies with CSRF protection, and Google sign-in is supported. The backend is the source of truth for authorization — your data is never shared.",
+    a: "Yes. Sessions use HTTP-only cookies with CSRF protection. The backend is the source of truth for authorization — your data is never shared.",
   },
 ];
 

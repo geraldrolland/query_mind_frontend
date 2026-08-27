@@ -46,7 +46,7 @@ const FEATURES = [
   {
     icon: ShieldCheck,
     title: "Secure by default",
-    body: "Session-based auth with CSRF protection and Google sign-in. Your data stays yours — the backend is the source of truth.",
+    body: "Session-based auth with CSRF protection. Your data stays yours — the backend is the source of truth.",
     accent: "from-pink-500/20 to-pink-500/0",
   },
 ];

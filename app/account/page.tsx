@@ -21,30 +21,28 @@ function AccountRedirect() {
   const exchanged = useRef(false);
 
   useEffect(() => {
-    const sessionToken = searchParams.get("session");
     const next = getNextDestination();
 
-    // Google OAuth lands here with a single-use session code. Exchange it for
-    // session cookies (set on a same-site JSON response, so browsers store
-    // them) before trusting the auth status.
-    if (sessionToken && !exchanged.current) {
-      exchanged.current = true;
-      authApi
-        .exchangeSession(sessionToken)
-        .then(() => refresh())
-        .then((ok) => {
-          router.replace(ok ? next : "/signin?msg=google session expired");
-        })
-        .catch(async () => {
-          const ok = await refresh();
-          router.replace(ok ? next : "/signin?msg=google session expired");
-        });
-      return;
-    }
+    // Google OAuth exchange (disabled — Google sign-in removed):
+    // const sessionToken = searchParams.get("session");
+    // if (sessionToken && !exchanged.current) {
+    //   exchanged.current = true;
+    //   authApi
+    //     .exchangeSession(sessionToken)
+    //     .then(() => refresh())
+    //     .then((ok) => {
+    //       router.replace(ok ? next : "/signin?msg=google session expired");
+    //     })
+    //     .catch(async () => {
+    //       const ok = await refresh();
+    //       router.replace(ok ? next : "/signin?msg=google session expired");
+    //     });
+    //   return;
+    // }
 
-    if (status === "authed" && !exchanged.current) {
+    if (status === "authed") {
       router.replace(next);
-    } else if (status === "anonymous" && !exchanged.current) {
+    } else if (status === "anonymous") {
       router.replace("/signin");
     }
   }, [status, searchParams, router, refresh]);
@@ -56,9 +54,10 @@ function AccountRedirect() {
       footer={null}
     >
       <p className="text-sm text-slate-400">
-        {msg === "google authentication success"
+        {/* {msg === "google authentication success"
           ? "Google sign-in successful."
-          : "Finishing authentication…"}
+          : "Finishing authentication…"} */}
+        Finishing authentication…
       </p>
     </AuthShell>
   );
