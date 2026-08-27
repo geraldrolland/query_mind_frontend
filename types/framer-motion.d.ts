@@ -1,1 +1,6 @@
-declare module "framer-motion" {}
+declare module "framer-motion" {
+  export const motion: any;
+  export const AnimatePresence: any;
+  export const useReducedMotion: any;
+  export type Variants = any;
+}
