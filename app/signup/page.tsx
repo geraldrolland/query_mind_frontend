@@ -7,7 +7,7 @@ import {
   AuthShell,
   ErrorBanner,
   FormField,
-  GoogleButton,
+  // GoogleButton,
   SubmitButton,
 } from "@/components/auth/auth-shell";
 
@@ -77,12 +77,12 @@ export default function SignUpPage() {
         />
         <SubmitButton loading={loading}>Create account</SubmitButton>
       </form>
-      <div className="my-5 flex items-center gap-3 text-xs text-slate-500">
+      {/* <div className="my-5 flex items-center gap-3 text-xs text-slate-500">
         <div className="h-px flex-1 bg-slate-800" />
         OR
         <div className="h-px flex-1 bg-slate-800" />
       </div>
-      <GoogleButton />
+      <GoogleButton /> */}
     </AuthShell>
   );
 }
