@@ -30,6 +30,7 @@ export default function AssistantPage() {
   const datasetId = params.datasetId;
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loadingMore, setLoadingMore] = useState(false);
+  const loadingMoreRef = useRef(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   const pageRef = useRef(1);
@@ -83,6 +84,10 @@ export default function AssistantPage() {
   useEffect(() => {
     messagesRef.current = messages;
   }, [messages]);
+
+  useEffect(() => {
+    loadingMoreRef.current = loadingMore;
+  }, [loadingMore]);
 
   const setStreamingSafe = (value: boolean) => {
     streamingRef.current = value;
@@ -341,14 +346,16 @@ export default function AssistantPage() {
   }, [scheduleReconnect]);
 
   const loadMoreMessages = async () => {
-    if (loadingMore) return;
-    if (totalRef.current > 0 && messages.length >= totalRef.current) return;
+    if (loadingMoreRef.current) return;
+    if (messagesRef.current.length === 0) return;
+    if (totalRef.current > 0 && messagesRef.current.length >= totalRef.current) return;
+    loadingMoreRef.current = true;
     setLoadingMore(true);
     try {
       const requestedPage = pageRef.current + 1;
       const res = await datasetApi.messages(datasetId, requestedPage);
       if (res.messages.length === 0) {
-        totalRef.current = messages.length;
+        totalRef.current = messagesRef.current.length;
         return;
       }
       const older = res.messages.slice().reverse().map(toChatMessage);
@@ -363,6 +370,7 @@ export default function AssistantPage() {
     } catch {
       /* retry on next intersection */
     } finally {
+      loadingMoreRef.current = false;
       setLoadingMore(false);
     }
   };
@@ -608,7 +616,7 @@ export default function AssistantPage() {
         )}
 
         <AnimatePresence>
-          {loadingMore && <LoadMore/>}
+          {loadingMore && messages.length > 0 && <LoadMore/>}
         </AnimatePresence>
 
         {messageNodes}
