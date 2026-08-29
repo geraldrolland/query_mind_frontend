@@ -1,14 +1,12 @@
-import { dateGranularity, formatLabel, formatValue } from "@/lib/utils";
+import { formatLabel, formatValue } from "@/lib/utils";
 
 interface TableChartPropType {
     rows: Record<string, unknown>[],
     keys: string[],
     labelKey: string,
-    dsl: Record<string, unknown>
 }
 
-const TableChart = ({rows, keys, labelKey, dsl}: TableChartPropType) => {
-    const granularity = dateGranularity(dsl);
+const TableChart = ({rows, keys, labelKey}: TableChartPropType) => {
     return(
         <>
         <div className="max-h-72 overflow-auto rounded-xl border border-slate-800 bg-slate-950/60">
@@ -26,7 +24,7 @@ const TableChart = ({rows, keys, labelKey, dsl}: TableChartPropType) => {
                   {keys.map((k) => (
                     <td key={k} className="px-3 py-2 text-slate-200">
                       {k === labelKey
-                        ? formatLabel(row[k], granularity)
+                        ? formatLabel(row[k], labelKey)
                         : formatValue(row[k])}
                     </td>
                   ))}

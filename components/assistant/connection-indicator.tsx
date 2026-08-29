@@ -1,12 +1,14 @@
 "use client";
 
+import { memo } from "react";
+
 interface ConnectionIndicatorProps {
   status: "connected" | "reconnecting" | "failed";
   countdown: number | null;
   attempt?: { current: number; total: number } | null;
 }
 
-export default function ConnectionIndicator({
+const ConnectionIndicator = memo(function ConnectionIndicator({
   status,
   countdown,
   attempt,
@@ -51,4 +53,6 @@ export default function ConnectionIndicator({
       )}
     </div>
   );
-}
+});
+
+export default ConnectionIndicator;
