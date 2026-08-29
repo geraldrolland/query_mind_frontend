@@ -4,14 +4,27 @@ import { FormEvent, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
+import { motion } from "framer-motion";
+import { Database, MessageSquareText, ShieldCheck } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import {
   AuthShell,
   ErrorBanner,
   FormField,
-  // GoogleButton,
   SubmitButton,
 } from "@/components/auth/auth-shell";
+
+const FEATURES = [
+  { icon: <Database className="h-3 w-3" />, text: "Access all your datasets" },
+  { icon: <MessageSquareText className="h-3 w-3" />, text: "Continue where you left off" },
+  { icon: <ShieldCheck className="h-3 w-3" />, text: "Your data stays secure" },
+];
+
+const TESTIMONIAL = {
+  quote: "The cleaning report alone saves me an hour a week. Now I just type my question and get a chart.",
+  name: "Maya R.",
+  role: "Data Analyst, Stripe",
+};
 
 function SignInForm() {
   const { login } = useAuth();
@@ -39,17 +52,24 @@ function SignInForm() {
     <AuthShell
       title="Welcome back"
       subtitle="Sign in to query your datasets"
+      features={FEATURES}
+      testimonial={TESTIMONIAL}
       footer={
-        <>
+        <span>
           New to QueryMind?{" "}
-          <Link href="/signup" className="text-indigo-400 hover:underline">
+          <Link href="/signup" className="font-medium text-indigo-400 transition hover:text-indigo-300">
             Create an account
           </Link>
-        </>
+        </span>
       }
     >
       <ErrorBanner message={error} />
-      <form onSubmit={onSubmit}>
+      <motion.form
+        onSubmit={onSubmit}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.3, delay: 0.1 }}
+      >
         <FormField
           label="Email"
           type="email"
@@ -67,18 +87,12 @@ function SignInForm() {
           autoComplete="current-password"
         />
         <div className="mb-3 text-right text-sm">
-          <Link href="/forgot-password" className="text-indigo-400 hover:underline">
+          <Link href="/forgot-password" className="text-indigo-400 transition hover:text-indigo-300">
             Forgot password?
           </Link>
         </div>
         <SubmitButton loading={loading}>Sign in</SubmitButton>
-      </form>
-      {/* <div className="my-5 flex items-center gap-3 text-xs text-slate-500">
-        <div className="h-px flex-1 bg-slate-800" />
-        OR
-        <div className="h-px flex-1 bg-slate-800" />
-      </div>
-      <GoogleButton /> */}
+      </motion.form>
     </AuthShell>
   );
 }

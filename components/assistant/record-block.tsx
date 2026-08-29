@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { useParams } from "next/navigation";
 
 import { datasetApi } from "@/lib/api/datasets";
 import { Loader2 } from "lucide-react";
@@ -10,33 +11,36 @@ import TableChart from "./charts/table-chart";
 import PieChart from "./charts/pie-chart";
 import BarChart from "./charts/bar-chart";
 import LineChart from "./charts/line-chart";
+import { checkComparisonData, transformComparisonData, inferGroupingField } from "@/lib/utils";
+import { useBodyOverflowLock } from "@/hooks/useBodyOverflowLock";
 
 type Row = Record<string, unknown>;
 
 const colorFor = (i: number) => `var(--color-chart-${(i % 5) + 1})`;
 
-
-
-function ChartScroller({ children }: { children: React.ReactNode }) {
+const ChartScroller = memo(({ children }: { children: React.ReactNode }) => {
   return (
     <div className="overflow-x-auto">
       <div className="w-full">{children}</div>
     </div>
   );
-}
+});
+ChartScroller.displayName = "ChartScroller";
 
 interface RecordBlockProps {
-  datasetId: string;
   dsl: Record<string, unknown>;
   chartType: string;
 }
 
-export function RecordBlock({ datasetId, dsl, chartType }: RecordBlockProps) {
+export function RecordBlock({ dsl, chartType }: RecordBlockProps) {
+  const params = useParams<{ datasetId: string }>();
+  const datasetId = params.datasetId;
   const [state, setState] = useState<{
     rows: Row[] | null;
     error: string | null;
     key: string;
-  }>({ rows: null, error: null, key: "" });
+    groupingField: string | null;
+  }>({ rows: null, error: null, key: "", groupingField: null });
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const key = JSON.stringify(dsl);
 
@@ -45,7 +49,16 @@ export function RecordBlock({ datasetId, dsl, chartType }: RecordBlockProps) {
     datasetApi
       .query(datasetId, dsl)
       .then((res) => {
-        if (!cancelled) setState({ rows: res.data ?? [], error: null, key });
+        if (!cancelled) {
+          if (res.data?.length > 0 && checkComparisonData(res.data[0]) && chartType !== "tablechart") {
+            const groupingField = inferGroupingField(res.data);
+            const rows = transformComparisonData(res.data);
+            setState({ rows, error: null, key, groupingField });
+          } else {
+            setState({ rows: res.data ?? [], error: null, key, groupingField: null });
+          }
+          
+        } 
       })
       .catch((err) => {
         if (!cancelled) {
@@ -53,7 +66,7 @@ export function RecordBlock({ datasetId, dsl, chartType }: RecordBlockProps) {
           const message = Array.isArray(detail)
             ? detail.map((d: { msg?: string }) => d?.msg ?? JSON.stringify(d)).join("; ")
             : detail ?? "Could not load chart data.";
-          setState({ rows: null, error: String(message), key });
+          setState({ rows: null, error: String(message), key, groupingField: null });
         }
       });
     return () => {
@@ -70,14 +83,7 @@ export function RecordBlock({ datasetId, dsl, chartType }: RecordBlockProps) {
     return () => window.removeEventListener("keydown", handler);
   }, [expandedId]);
 
-  useEffect(() => {
-    if (expandedId) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
-    return () => { document.body.style.overflow = ""; };
-  }, [expandedId]);
+  useBodyOverflowLock(Boolean(expandedId));
 
   const rows = state.key === key ? state.rows : null;
   const error = state.key === key ? state.error : null;
@@ -88,17 +94,24 @@ export function RecordBlock({ datasetId, dsl, chartType }: RecordBlockProps) {
   }, [rows]);
 
   const { labelKey, valueKey } = useMemo(() => {
-    const numeric = keys.filter((k) => typeof rows?.[0]?.[k] === "number");
-    const label = keys.find((k) => typeof rows?.[0]?.[k] !== "number");
+    if (!rows || rows.length === 0) return { labelKey: "", valueKey: "" };
+
+    if (state.groupingField) {
+      const numeric = keys.filter((k) => typeof rows[0][k] === "number");
+      return { labelKey: state.groupingField, valueKey: numeric[0] ?? keys[keys.length - 1] };
+    }
+
+    const numeric = keys.filter((k) => typeof rows[0][k] === "number");
+    const label = keys.find((k) => typeof rows[0][k] !== "number");
     return { labelKey: label ?? keys[0], valueKey: numeric[0] ?? keys[keys.length - 1] };
-  }, [keys, rows]);
+  }, [keys, rows, state.groupingField]);
 
   const renderChart = useCallback((type: string, isModal: boolean) => {
     if (!rows) return null;
 
     if (type === "metricchart") {
       const value = rows[0]?.[valueKey];
-      return <MetricChart valueKey={valueKey} labelKey={labelKey} value={value} />;
+      return <MetricChart valueKey={valueKey} value={value} />;
     }
 
     if (type === "tablechart") {

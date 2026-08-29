@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
 import { ArrowRight, Sparkles } from "lucide-react";
+import { CountUp } from "./count-up";
 
 const PHRASES = [
   "average revenue by region",
@@ -15,17 +16,24 @@ const PHRASES = [
 const TITLE = ["Ask your data", "anything"];
 
 const STATS = [
-  { value: "10M+", label: "rows analyzed" },
-  { value: "1-click", label: "chart every answer" },
-  { value: "0 SQL", label: "needed to ask" },
-  { value: "<5s", label: "to first insight" },
+  { end: 10, suffix: "M+", label: "rows analyzed" },
+  { end: 1, suffix: "-click", label: "chart every answer" },
+  { end: 0, suffix: " SQL", label: "needed to ask" },
+  { end: 5, prefix: "<", suffix: "s", label: "to first insight" },
 ];
+
+const TRUSTED = ["Acme Corp", "TechFlow", "DataStack", "InsightBase", "Metricly"];
 
 export function Hero() {
   const reduce = useReducedMotion();
   const [phraseIdx, setPhraseIdx] = useState(0);
   const [chars, setChars] = useState(0);
   const [deleting, setDeleting] = useState(false);
+
+  const { scrollY } = useScroll();
+  const orb1Y = useTransform(scrollY, [0, 600], [0, -80]);
+  const orb2Y = useTransform(scrollY, [0, 600], [0, -50]);
+  const orb3Y = useTransform(scrollY, [0, 600], [0, -30]);
 
   useEffect(() => {
     if (reduce) return;
@@ -62,9 +70,18 @@ export function Hero() {
             maskImage: "radial-gradient(ellipse 80% 60% at 50% 0%, black 40%, transparent 100%)",
           }}
         />
-        <div className="absolute -top-32 left-1/2 h-96 w-[42rem] -translate-x-1/2 animate-orb rounded-full bg-indigo-600/25 blur-3xl" />
-        <div className="absolute top-40 -left-32 h-72 w-72 animate-float-slow rounded-full bg-cyan-500/15 blur-3xl" />
-        <div className="absolute top-24 -right-32 h-80 w-80 animate-float rounded-full bg-violet-600/15 blur-3xl" />
+        <motion.div
+          style={{ y: orb1Y }}
+          className="absolute -top-32 left-1/2 h-96 w-[42rem] -translate-x-1/2 animate-orb rounded-full bg-indigo-600/25 blur-3xl"
+        />
+        <motion.div
+          style={{ y: orb2Y }}
+          className="absolute top-40 -left-32 h-72 w-72 animate-float-slow rounded-full bg-cyan-500/15 blur-3xl"
+        />
+        <motion.div
+          style={{ y: orb3Y }}
+          className="absolute top-24 -right-32 h-80 w-80 animate-float rounded-full bg-violet-600/15 blur-3xl"
+        />
       </div>
 
       <div className="mx-auto max-w-6xl px-6 pt-20 pb-24 text-center sm:pt-28">
@@ -159,7 +176,7 @@ export function Hero() {
                   {i + 1}
                 </span>
                 <span className="font-mono text-xs">
-                  “{reduce ? p : p.slice(0, chars)}”
+                  &ldquo;{reduce ? p : p.slice(0, chars)}&rdquo;
                   {i === phraseIdx && !reduce && (
                     <span className="ml-0.5 inline-block h-3.5 w-[2px] animate-caret bg-indigo-400 align-middle" />
                   )}
@@ -177,12 +194,38 @@ export function Hero() {
         >
           {STATS.map((s) => (
             <div key={s.label}>
-              <div className="bg-gradient-to-r from-indigo-300 to-cyan-300 bg-clip-text text-2xl font-extrabold text-transparent sm:text-3xl">
-                {s.value}
+              <div className="text-2xl font-extrabold sm:text-3xl">
+                <CountUp
+                  end={s.end}
+                  prefix={s.prefix}
+                  suffix={s.suffix}
+                  className="bg-gradient-to-r from-indigo-300 to-cyan-300 bg-clip-text text-transparent"
+                />
               </div>
               <div className="mt-1 text-xs text-slate-500">{s.label}</div>
             </div>
           ))}
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.8, delay: 1.3 }}
+          className="mx-auto mt-16 max-w-lg"
+        >
+          <p className="mb-4 text-xs font-medium uppercase tracking-widest text-slate-600">
+            Trusted by data teams
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3">
+            {TRUSTED.map((name) => (
+              <span
+                key={name}
+                className="text-sm font-semibold text-slate-600 transition-colors hover:text-slate-400"
+              >
+                {name}
+              </span>
+            ))}
+          </div>
         </motion.div>
       </div>
     </section>

@@ -1,5 +1,6 @@
 "use client"
 
+import { memo } from "react";
 import { motion } from "framer-motion";
 import { Sparkles } from "lucide-react";
 
@@ -11,11 +12,11 @@ const SUGGESTIONS = [
 ];
 
 interface SuggestionBlockPropType {
-    handleSend: ((text: string) => void)
+    handleSend: (text: string) => void
     disabled?: boolean
 }
 
-const SuggestionBlock = ({handleSend, disabled = false}: SuggestionBlockPropType) => {
+const SuggestionBlock = memo(({ handleSend, disabled = false }: SuggestionBlockPropType) => {
     return(
         <>
         <motion.div
@@ -61,6 +62,7 @@ const SuggestionBlock = ({handleSend, disabled = false}: SuggestionBlockPropType
           </motion.div>
         </>
     )
-}
+});
 
+SuggestionBlock.displayName = "SuggestionBlock";
 export default SuggestionBlock;

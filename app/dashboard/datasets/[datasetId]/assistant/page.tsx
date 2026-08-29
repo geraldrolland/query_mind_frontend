@@ -166,10 +166,6 @@ export default function AssistantPage() {
 
   const connect = useCallback(() => {
     if (!mountedRef.current || closedByUsRef.current) {
-      console.warn("[ws] connect blocked", {
-        mounted: mountedRef.current,
-        closedByUs: closedByUsRef.current,
-      });
       return;
     }
     const existing = socketRef.current;
@@ -183,11 +179,9 @@ export default function AssistantPage() {
     const dsId = datasetIdRef.current;
     const socket = new WebSocket(wsUrl(dsId));
     socketRef.current = socket;
-    console.info("[ws] connecting", wsUrl(dsId));
 
     socket.onopen = () => {
       if (socketRef.current !== socket) return;
-      console.info("[ws] open");
       reconnectStepRef.current = 0;
       setConnStatus("connected");
       setReconnectCountdown(0);
@@ -292,7 +286,6 @@ export default function AssistantPage() {
 
     socket.onclose = (event: CloseEvent) => {
       if (socketRef.current !== socket) return;
-      console.warn("[ws] close", event.code, event.reason || "(no reason)");
       stopPinger();
       socketRef.current = null;
       if (event.code === 1008 || event.code === 1013) {

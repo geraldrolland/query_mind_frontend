@@ -1,18 +1,17 @@
 "use client";
 
-import { useRef } from "react";
+import { memo, useRef } from "react";
 import { Send } from "lucide-react";
 
 interface InputBlockPropType {
-    handleSend: ((text: string) => void),
+    handleSend: (text: string) => void,
     inputValue: string,
     disableSendBtn: boolean,
     placeholder: string,
-    setInputValue: ((inputValue: string) => void)
+    setInputValue: (inputValue: string) => void
 }
 
-
-const InputBlock = ({handleSend, disableSendBtn, inputValue, setInputValue, placeholder}: InputBlockPropType) => {
+const InputBlock = memo(({ handleSend, disableSendBtn, inputValue, setInputValue, placeholder }: InputBlockPropType) => {
     const textareaRef = useRef<HTMLTextAreaElement>(null);
 
     const handleInput = () => {
@@ -23,7 +22,6 @@ const InputBlock = ({handleSend, disableSendBtn, inputValue, setInputValue, plac
     };
 
     return(
-        <>
         <div className="mx-4 mb-4 flex items-end gap-2">
           <textarea
             ref={textareaRef}
@@ -51,8 +49,8 @@ const InputBlock = ({handleSend, disableSendBtn, inputValue, setInputValue, plac
             <Send className="h-4 w-4" />
           </button>
         </div>
-        </>
-    )
-}
+    );
+});
 
+InputBlock.displayName = "InputBlock";
 export default InputBlock;

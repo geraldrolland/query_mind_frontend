@@ -1,10 +1,12 @@
 "use client"
 
+import { memo } from "react";
 import { motion } from "framer-motion";
 import { useParams } from "next/navigation";
 import { ArrowLeft, Sparkles } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { formatRows } from "@/lib/utils";
 
 interface HeaderBlockProps {
     datasetName?: string;
@@ -12,13 +14,7 @@ interface HeaderBlockProps {
     indicator?: ReactNode;
 }
 
-function formatRows(n: number): string {
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1).replace(/\.0$/, "")}M`;
-  if (n >= 1_000) return `${(n / 1_000).toFixed(1).replace(/\.0$/, "")}k`;
-  return n.toLocaleString();
-}
-
-const HeaderBlock = ({ datasetName, totalRows, indicator }: HeaderBlockProps) => {
+const HeaderBlock = memo(({ datasetName, totalRows, indicator }: HeaderBlockProps) => {
     const params = useParams<{ datasetId: string }>();
     const datasetId = params.datasetId;
     const name = datasetName || "Your Dataset";
@@ -56,6 +52,7 @@ const HeaderBlock = ({ datasetName, totalRows, indicator }: HeaderBlockProps) =>
             </div>
         </motion.header>
     );
-};
+});
 
+HeaderBlock.displayName = "HeaderBlock";
 export default HeaderBlock;

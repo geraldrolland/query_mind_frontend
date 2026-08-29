@@ -1,5 +1,6 @@
 "use client"
 
+import { memo } from "react";
 import { ChatMessage } from "@/lib/types";
 import { motion } from "framer-motion";
 import { Clock, Loader2, Check } from "lucide-react";
@@ -7,13 +8,12 @@ import AssistantContentBlock from "./assistant-content-block";
 import UserContentBlock from "./user-content-block";
 import AssistantErrorBlock from "./assistant-error-block";
 import { RecordBlock } from "./record-block";
-import { useParams } from "next/navigation";
 
+interface MessageBlockProps {
+  message: ChatMessage;
+}
 
-
-const MessageBlock = ({message}: {message: ChatMessage}) => {
-    const params = useParams();
-    const datasetId = params.datasetId;
+const MessageBlock = memo(({ message }: MessageBlockProps) => {
     const isQueued = message.status === "queued";
 
     return(
@@ -66,7 +66,7 @@ const MessageBlock = ({message}: {message: ChatMessage}) => {
                 ) : (
                     <div className="space-y-3">
                     {message.type === "record" ? (
-                        <RecordBlock datasetId={datasetId as string} dsl={message.record as Record<string, unknown>} chartType={message.chartType as string}/>
+                        <RecordBlock dsl={message.record as Record<string, unknown>} chartType={message.chartType as string}/>
                         ) : (
                         <>
                         {message.content && <AssistantContentBlock content={message.content} />}
@@ -78,6 +78,7 @@ const MessageBlock = ({message}: {message: ChatMessage}) => {
                 </div>
             </motion.div>
     )
-}
+});
 
+MessageBlock.displayName = "MessageBlock";
 export default MessageBlock;

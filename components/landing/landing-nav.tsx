@@ -9,19 +9,39 @@ const LINKS = [
   { href: "#features", label: "Features" },
   { href: "#how-it-works", label: "How it works" },
   { href: "#demo", label: "Live demo" },
-  { href: "#who-its-for", label: "Who it's for" },
+  { href: "#who-its-for", label: "Who it\u2019s for" },
   { href: "#faq", label: "FAQ" },
 ];
 
 export function LandingNav() {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [active, setActive] = useState("");
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  useEffect(() => {
+    const sections = LINKS.map((l) => l.href.replace("#", ""));
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            setActive("#" + entry.target.id);
+          }
+        }
+      },
+      { rootMargin: "-40% 0px -55% 0px" }
+    );
+    for (const id of sections) {
+      const el = document.getElementById(id);
+      if (el) observer.observe(el);
+    }
+    return () => observer.disconnect();
   }, []);
 
   return (
@@ -52,9 +72,20 @@ export function LandingNav() {
             <Link
               key={link.href}
               href={link.href}
-              className="rounded-lg px-3 py-2 text-sm text-slate-300 transition hover:bg-white/5 hover:text-white"
+              className={`relative rounded-lg px-3 py-2 text-sm transition ${
+                active === link.href
+                  ? "text-white"
+                  : "text-slate-300 hover:bg-white/5 hover:text-white"
+              }`}
             >
               {link.label}
+              {active === link.href && (
+                <motion.div
+                  layoutId="nav-indicator"
+                  className="absolute inset-x-1 -bottom-0.5 h-0.5 rounded-full bg-indigo-400"
+                  transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                />
+              )}
             </Link>
           ))}
         </nav>

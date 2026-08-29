@@ -29,7 +29,10 @@ const PieChart = ({rows, labelKey, valueKey, colorFor}: PieChartPropType) => {
         <>
             <ChartContainer config={pieConfig} className="h-64 min-w-[300px]">
               <Chart>
-                <Pie data={pieData} dataKey="value" nameKey="name" innerRadius="45%" outerRadius="80%" paddingAngle={2}>
+                <Pie data={pieData} dataKey="value" nameKey="name" outerRadius="80%" paddingAngle={2}
+                  label={({ name, value }) => `${name}: ${value}`}
+                  labelLine={{ stroke: "#64748b", strokeWidth: 1 }}
+                >
                   {pieData.map((d, i) => (
                     <Cell key={i} fill={d.fill} />
                   ))}
