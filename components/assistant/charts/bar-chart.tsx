@@ -1,4 +1,4 @@
-import { dateGranularity, formatLabel } from "@/lib/utils"
+import { formatLabel, transformComparisonData, checkComparisonData } from "@/lib/utils"
 import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent} from "@/components/ui/chart";
 import {
   BarChart as Chart,
@@ -13,12 +13,11 @@ interface BarChartPropType {
     rows: Record<string, unknown>[],
     valueKey: string,
     labelKey: string,
-    dsl: Record<string, unknown>
 }
 
 
-const BarChart = ({rows, valueKey, labelKey, dsl}: BarChartPropType) => {
-  const granularity = dateGranularity(dsl);
+const BarChart = ({rows, valueKey, labelKey}: BarChartPropType) => {
+  console.log(Object.keys(rows[0])[0]);
   const data = rows
     .filter(
       (row: {[x: string]: unknown}) =>
@@ -27,7 +26,7 @@ const BarChart = ({rows, valueKey, labelKey, dsl}: BarChartPropType) => {
         row[labelKey] !== ""
     )
     .map((row: {[x: string]: unknown}) => ({
-      label: formatLabel(row[labelKey], granularity),
+      label: formatLabel(row[labelKey], labelKey),
       value: Number(row[valueKey]) || 0,
     }));
   const seriesConfig: ChartConfig = {

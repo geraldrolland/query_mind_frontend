@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { motion } from "framer-motion";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 
 import { datasetApi } from "@/lib/api/datasets";
 import { Loader2 } from "lucide-react";
@@ -16,18 +16,6 @@ type Row = Record<string, unknown>;
 const colorFor = (i: number) => `var(--color-chart-${(i % 5) + 1})`;
 
 
-
-function ChartEntrance({ children }: { children: React.ReactNode }) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 12, scale: 0.98 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ duration: 0.4, ease: "easeOut" }}
-    >
-      {children}
-    </motion.div>
-  );
-}
 
 function ChartScroller({ children }: { children: React.ReactNode }) {
   return (
@@ -49,6 +37,7 @@ export function RecordBlock({ datasetId, dsl, chartType }: RecordBlockProps) {
     error: string | null;
     key: string;
   }>({ rows: null, error: null, key: "" });
+  const [expandedId, setExpandedId] = useState<string | null>(null);
   const key = JSON.stringify(dsl);
 
   useEffect(() => {
@@ -72,6 +61,24 @@ export function RecordBlock({ datasetId, dsl, chartType }: RecordBlockProps) {
     };
   }, [datasetId, dsl, key]);
 
+  useEffect(() => {
+    if (!expandedId) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setExpandedId(null);
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [expandedId]);
+
+  useEffect(() => {
+    if (expandedId) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => { document.body.style.overflow = ""; };
+  }, [expandedId]);
+
   const rows = state.key === key ? state.rows : null;
   const error = state.key === key ? state.error : null;
 
@@ -86,7 +93,46 @@ export function RecordBlock({ datasetId, dsl, chartType }: RecordBlockProps) {
     return { labelKey: label ?? keys[0], valueKey: numeric[0] ?? keys[keys.length - 1] };
   }, [keys, rows]);
 
+  const renderChart = useCallback((type: string, isModal: boolean) => {
+    if (!rows) return null;
 
+    if (type === "metricchart") {
+      const value = rows[0]?.[valueKey];
+      return <MetricChart valueKey={valueKey} labelKey={labelKey} value={value} />;
+    }
+
+    if (type === "tablechart") {
+      return <TableChart rows={rows} labelKey={labelKey} keys={keys} />;
+    }
+
+    if (type === "piechart") {
+      return (
+        <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-2">
+          <ChartScroller>
+            <PieChart rows={rows} labelKey={labelKey} valueKey={valueKey} colorFor={colorFor} />
+          </ChartScroller>
+        </div>
+      );
+    }
+
+    if (type === "linechart") {
+      return (
+        <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-2">
+          <ChartScroller>
+            <LineChart rows={rows} valueKey={valueKey} labelKey={labelKey} />
+          </ChartScroller>
+        </div>
+      );
+    }
+
+    return (
+      <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-2">
+        <ChartScroller>
+          <BarChart rows={rows} valueKey={valueKey} labelKey={labelKey} />
+        </ChartScroller>
+      </div>
+    );
+  }, [rows, keys, labelKey, valueKey]);
 
   if (error) {
     return (
@@ -113,56 +159,52 @@ export function RecordBlock({ datasetId, dsl, chartType }: RecordBlockProps) {
     );
   }
 
-  if (chartType === "metricchart") {
-    const value = rows[0]?.[valueKey];
-    return (
-      <ChartEntrance>
-        <MetricChart valueKey={valueKey} labelKey={labelKey} value={value} />
-      </ChartEntrance>
-    );
-  }
+  return (
+    <>
+      <motion.div
+        layoutId={`chart-${chartType}-${key}`}
+        onDoubleClick={() => setExpandedId(chartType)}
+        className="cursor-pointer rounded-xl"
+        initial={{ opacity: 0, y: 12, scale: 0.98 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{
+          layout: { type: "spring", stiffness: 300, damping: 30 },
+          opacity: { duration: 0.2 },
+          default: { duration: 0.4, ease: "easeOut" },
+        }}
+      >
+        {renderChart(chartType, false)}
+      </motion.div>
 
-  if (chartType === "tablechart") {
-    return (
-      <ChartEntrance>
-        <TableChart dsl={dsl} rows={rows} labelKey={labelKey} keys={keys} />
-      </ChartEntrance>
-    );
-  }
-
-  if (chartType === "piechart") {
-    return (
-      <ChartEntrance>
-        <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-2">
-          <ChartScroller>
-            <PieChart rows={rows} labelKey={labelKey} valueKey={valueKey} colorFor={colorFor} />
-          </ChartScroller>
-        </div>
-      </ChartEntrance>
-    );
-  }
-
-  if (chartType === "linechart") {
-    return (
-      <ChartEntrance>
-        <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-2">
-          <ChartScroller>
-            <LineChart rows={rows} valueKey={valueKey} labelKey={labelKey} dsl={dsl} />
-          </ChartScroller>
-        </div>
-      </ChartEntrance>
-    );
-  }
-
-  else {
-    return (
-      <ChartEntrance>
-        <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-2">
-          <ChartScroller>
-            <BarChart rows={rows} valueKey={valueKey} labelKey={labelKey} dsl={dsl} />
-          </ChartScroller>
-        </div>
-      </ChartEntrance>
-    );
-  }
+      <AnimatePresence>
+        {expandedId && (
+          <motion.div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-8"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            onClick={() => setExpandedId(null)}
+          >
+            <motion.div
+              layoutId={`chart-${expandedId}-${key}`}
+              className="relative max-h-[85vh] max-w-[90vw] rounded-2xl border border-slate-800 bg-slate-950 p-4"
+              transition={{
+                layout: { type: "spring", stiffness: 300, damping: 30 },
+              }}
+              onClick={(e: React.MouseEvent) => e.stopPropagation()}
+            >
+              <button
+                onClick={() => setExpandedId(null)}
+                className="absolute right-3 top-3 z-10 rounded-lg bg-slate-800 px-2 py-1 text-xs text-slate-400 hover:bg-slate-700 hover:text-white"
+              >
+                ✕
+              </button>
+              {renderChart(expandedId, true)}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
+  );
 }

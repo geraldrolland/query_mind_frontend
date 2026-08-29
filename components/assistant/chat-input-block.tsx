@@ -1,5 +1,8 @@
 "use client";
 
+import { useRef } from "react";
+import { Send } from "lucide-react";
+
 interface InputBlockPropType {
     handleSend: ((text: string) => void),
     inputValue: string,
@@ -10,22 +13,42 @@ interface InputBlockPropType {
 
 
 const InputBlock = ({handleSend, disableSendBtn, inputValue, setInputValue, placeholder}: InputBlockPropType) => {
+    const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+    const handleInput = () => {
+      const el = textareaRef.current;
+      if (!el) return;
+      el.style.height = "auto";
+      el.style.height = `${Math.min(el.scrollHeight, 128)}px`;
+    };
+
     return(
         <>
-        <div className="flex gap-2">
-          <input
+        <div className="mx-4 mb-4 flex items-end gap-2">
+          <textarea
+            ref={textareaRef}
+            rows={1}
+            maxLength={4000}
             value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
+            onChange={(e) => {
+              setInputValue(e.target.value);
+              handleInput();
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                handleSend(inputValue);
+              }
+            }}
             placeholder={placeholder}
-            onKeyDown={(e) => e.key === "Enter" && handleSend(inputValue)}
-            className="flex-1 rounded border border-slate-400 px-3 py-2 focus outline-none focus:ring-2 focus:ring-indigo-500"
+            className="max-h-32 min-h-[36px] flex-1 resize-none overflow-y-auto rounded bg-slate-800 px-3 py-2 text-slate-200 outline-none placeholder:text-slate-500"
           />
           <button
             onClick={() => handleSend(inputValue)}
             disabled={disableSendBtn || !inputValue.trim()}
-            className="rounded border border-indigo-600 px-4 py-2 text-sm text-indigo-600 hover:bg-indigo-100"
+            className="h-[36px] rounded bg-indigo-600 px-4 text-sm text-white hover:bg-indigo-500 disabled:opacity-40"
           >
-            Send
+            <Send className="h-4 w-4" />
           </button>
         </div>
         </>

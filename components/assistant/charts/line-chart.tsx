@@ -6,18 +6,21 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { dateGranularity, formatLabel } from "@/lib/utils"
+import { checkComparisonData, formatLabel, transformComparisonData } from "@/lib/utils"
+import { useEffect } from "react";
 
 
 interface LineChartPropType {
     rows: Record<string, unknown>[],
     valueKey: string,
     labelKey: string,
-    dsl: Record<string, unknown>
 }
 
-const LineChart = ({rows, valueKey, labelKey, dsl}: LineChartPropType) => {
-  const granularity = dateGranularity(dsl);
+const LineChart = ({rows, valueKey, labelKey}: LineChartPropType) => {
+  useEffect(() => {
+    console.log(rows.slice(0, 20));
+  }, [])
+
   const data = rows
     .filter(
       (row: {[x: string]: unknown}) =>
@@ -26,9 +29,13 @@ const LineChart = ({rows, valueKey, labelKey, dsl}: LineChartPropType) => {
         row[labelKey] !== ""
     )
     .map((row: {[x: string]: unknown}) => ({
-      label: formatLabel(row[labelKey], granularity),
+      label: formatLabel(row[labelKey], labelKey),
       value: Number(row[valueKey]) || 0,
     }));
+
+  if (checkComparisonData(rows[0])) {
+    console.log(transformComparisonData(rows));
+  }
   const seriesConfig: ChartConfig = {
     value: { label: valueKey, color: "var(--color-chart-1)" },
   };

@@ -1,6 +1,6 @@
 import type { ChatEvent, ChatMessage } from "@/lib/types";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const API_URL = "http://localhost:8000";
 
 function wsBaseUrl(): string {
   return API_URL.replace(/^https:/, "wss:").replace(/^http:/, "ws:");

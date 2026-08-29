@@ -4,6 +4,73 @@ import { ChatMessage } from "./types";
 import { DatasetMessage } from "./types";
 
 
+export const checkComparisonData = (row: Record<string, unknown>): boolean => {
+  if (Object.keys(row).length === 3) return true;
+  return false
+}
+
+export const transformComparisonData = (rows: Record<string, unknown>[]): Record<string, unknown>[] => {
+  const groupingField = inferGroupingField(rows);
+  console.log("THIS IS THE GROUPING FIELD: ", groupingField)
+
+  const transformedRows: Record<string, unknown>[] = [];
+
+  for (let upperRow of rows) {
+    const relatedRows = rows.filter((row) => row[groupingField] === upperRow[groupingField]);
+    let comparisonRow: Record<string, unknown> = {}
+    for (let row of relatedRows) {
+      comparisonRow[groupingField] = row[groupingField];
+      const otherFields = Object.keys(row).filter((key) => key !== groupingField);
+      const comparisonField = row[otherFields[0]] as string;
+      const metricField = otherFields[1];
+      comparisonRow[comparisonField] = row[metricField];
+    }
+    if (transformedRows.find((row) => row[groupingField] === comparisonRow[groupingField])) continue;
+    transformedRows.push(comparisonRow);
+ 
+  }
+  return transformedRows;
+}
+
+const inferGroupingField = (rows: Record<string, unknown>[]): string => {
+  const firstRow = rows[0];
+  console.log(firstRow);
+  let record: {[K in "field1" | "field2"]: {seenCount: number, value: unknown, name: string}} | null = null;
+  let keys = Object.keys(firstRow);
+  keys.pop()
+
+  console.log("THE KEYS: ", keys)
+  record = {
+    field1: {
+      seenCount: 0, 
+      value: keys ? firstRow[keys[0]] : "", 
+      name: keys ? keys[0] : ""
+    },
+    field2: {
+      seenCount: 0, 
+      value: keys ? firstRow[keys[1]] : "", 
+      name: keys ? keys[1] : ""
+    },
+}
+
+rows.forEach((row: Record<string, unknown>) => {
+  if (row[record.field1.name] === record.field1.value) {
+    record.field1.seenCount += 1
+  }
+
+  if (row[record.field2.name] === record.field2.value) {
+    record.field2.seenCount += 1
+  }
+})
+
+console.log('THIS IS RECORD: ', record);
+
+if (record.field1.seenCount < record.field2.seenCount) return record.field1.name;
+return record.field2.name;
+}
+
+
+
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
@@ -12,40 +79,35 @@ export const formatValue = (v: unknown): string => {
     return String(v ?? "");
   };
 
-export function dateGranularity(dsl: Record<string, unknown>): string | null {
-  const groupBy = dsl.group_by;
-  if (!Array.isArray(groupBy)) return null;
-  for (const entry of groupBy) {
-    if (entry && typeof entry === "object" && "granularity" in entry) {
-      const granularity = (entry as { granularity?: unknown }).granularity;
-      if (typeof granularity === "string") return granularity;
-    }
-  }
-  return null;
-}
+const MONTHS = ["", "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
-export function formatLabel(value: unknown, granularity: string | null): string {
-  if (typeof value !== "string" && typeof value !== "number") return String(value ?? "");
+export function formatLabel(value: unknown, labelKey: string): string {
+  if (value === null || value === undefined) return "";
 
-  console.log(typeof(value));
-  console.log(value);
-  console.log(granularity);
-  if (!granularity) return String(value);
 
+  const suffix = labelKey.split("_").pop();
+  console.log(suffix);
+  if (!suffix) return String(value);
 
   const m = /^(\d{4})-(\d{2})-\d{2}/.exec(String(value));
-  if (!m) return String(value);
+
+
+  if (["month", "day", "year"].includes(suffix)) {
+    console.log("IT IS A NUMBER", value);
+    if (suffix === "year") return String(value);
+    if (suffix === "month") return MONTHS[value as number] ?? String(value);
+    return String(value);
+  }
+
+  else if (m) {
   const year = Number(m[1]);
   const month = Number(m[2]);
-  if (granularity === "year") return String(year);
-  if (granularity === "quarter") return `Q${Math.floor((month - 1) / 3) + 1} ${year}`;
-  if (granularity === "month") {
-    const name = new Date(Date.UTC(year, month - 1, 1)).toLocaleString("en-US", {
-      month: "short",
-    });
-    return `${name} ${year}`;
+  if (suffix === "year") return String(year);
+  if (suffix === "month") return MONTHS[month] ?? String(value);
   }
-  return String(value);
+
+  return String(value ?? "");
 }
 
 const QUEUE_KEY_PREFIX = "queuedMsgs";
@@ -96,6 +158,7 @@ export function toChatMessage(m: DatasetMessage): ChatMessage {
       type: "record",
       chartType: m.chart_type,
       record: m.content as unknown as Record<string, unknown>,
+      status: "sent",
     };
   }
   return {
@@ -104,6 +167,7 @@ export function toChatMessage(m: DatasetMessage): ChatMessage {
     content: String(m.content ?? ""),
     type: "text",
     is_error: m.is_error,
+    status: "sent",
   };
 }
 

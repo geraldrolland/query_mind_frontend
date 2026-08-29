@@ -12,7 +12,6 @@ import LoadMore from "@/components/assistant/load-more";
 import InputBlock from "@/components/assistant/chat-input-block";
 import HeaderBlock from "@/components/assistant/header-block";
 import { StreamingDots } from "@/components/assistant/tool-call-card";
-import QueueMessageBlock from "@/components/assistant/queue-message-block";
 import ConnectionIndicator from "@/components/assistant/connection-indicator";
 import { readQueue, writeQueue, toChatMessage, parseFrame, getInflightId, setInflightId, removeInflightId, popQueueMsg } from "@/lib/utils";
 
@@ -565,7 +564,6 @@ export default function AssistantPage() {
     }
 
   const messageNodes = useMemo(() => {
-    if (messages.length === 0) return null;
     const visible = messages.filter(
       (m) =>
         m.role === "user" ||
@@ -573,12 +571,13 @@ export default function AssistantPage() {
         Boolean(m.content) ||
         Boolean(m.error)
     );
+    for (const qm of queueMessages) {
+      if (!visible.some((m) => m.id === qm.id)) {
+        visible.push(qm);
+      }
+    }
     return visible.map((m) => ( <MessageBlock key={m.id} message={m} /> ));
-  }, [messages]);
-
-  const queueMessageNodes = useMemo(() => {
-    return queueMessages.map((m) => <QueueMessageBlock key={m.id} message={m} />)
-  }, [queueMessages]);
+  }, [messages, queueMessages]);
 
   const retryConnection = () => {
     setConnectFailed(false);
@@ -619,14 +618,15 @@ export default function AssistantPage() {
           {loadingMore && messages.length > 0 && <LoadMore/>}
         </AnimatePresence>
 
-        {messageNodes}
+        <AnimatePresence>
+          {messageNodes}
+        </AnimatePresence>
         {streaming && <StreamingDots status={status as string} />}
-        {queueMessageNodes}
+        </div>
+
         <InputBlock
          placeholder="Ask about your data… (e.g. average revenue by region, top 5)" handleSend={handleSend} disableSendBtn={disableSendBtn} inputValue={inputValue} setInputValue={setInputValue}
          />
-
-      </div>
 
       {connectFailed && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">

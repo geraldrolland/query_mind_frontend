@@ -2,6 +2,7 @@
 
 import { ChatMessage } from "@/lib/types";
 import { motion } from "framer-motion";
+import { Clock, Loader2, Check } from "lucide-react";
 import AssistantContentBlock from "./assistant-content-block";
 import UserContentBlock from "./user-content-block";
 import AssistantErrorBlock from "./assistant-error-block";
@@ -13,17 +14,18 @@ import { useParams } from "next/navigation";
 const MessageBlock = ({message}: {message: ChatMessage}) => {
     const params = useParams();
     const datasetId = params.datasetId;
+    const isQueued = message.status === "queued";
 
     return(
-    <>
         <motion.div
-                key={message.id}
+                layout
                 initial={{ opacity: 0, y: 14, scale: 0.97 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
-                transition={{ duration: 0.35, ease: "easeOut" }}
+                exit={{ opacity: 0, y: -10, scale: 0.97 }}
+                transition={{ duration: 0.3, ease: "easeOut" }}
                 className={`mx-auto flex max-w-3xl ${
                 message.role === "user" ? "justify-end" : "justify-start"
-                }`}
+                } ${isQueued ? "opacity-60" : ""}`}
             >
                 <div
                 className={`max-w-[92%] rounded-2xl px-4 py-3 sm:max-w-[85%] ${
@@ -38,14 +40,27 @@ const MessageBlock = ({message}: {message: ChatMessage}) => {
                     <div>
                         <UserContentBlock content={message.content} />
                         {message.status === "pending" && (
-                            <p className="mt-1 text-right text-[10px] uppercase tracking-wide text-indigo-200">
-                                sending…
-                            </p>
+                            <div className="mt-1.5 flex items-center gap-1 text-[10px] text-indigo-200/60">
+                                <Loader2 className="h-3 w-3 animate-spin" />
+                                <span>sending</span>
+                            </div>
+                        )}
+                        {message.status === "sent" && (
+                            <div className="mt-1.5 flex items-center gap-1 text-[10px] text-indigo-200/60">
+                                <Check className="h-3 w-3" />
+                                <span>sent</span>
+                            </div>
                         )}
                         {message.status === "failed" && (
-                            <p className="mt-1 text-right text-[10px] uppercase tracking-wide text-red-200">
-                                failed
-                            </p>
+                            <div className="mt-1.5 flex items-center gap-1 text-[10px] text-red-200/60">
+                                <span>failed</span>
+                            </div>
+                        )}
+                        {isQueued && (
+                            <div className="mt-1.5 flex items-center gap-1 text-[10px] text-indigo-200/60">
+                                <Clock className="h-3 w-3" />
+                                <span>queued</span>
+                            </div>
                         )}
                     </div>
                 ) : (
@@ -62,7 +77,6 @@ const MessageBlock = ({message}: {message: ChatMessage}) => {
                 )}
                 </div>
             </motion.div>
-    </>
     )
 }
 

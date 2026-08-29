@@ -3,7 +3,7 @@
 import { FormEvent, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { UploadCloud, X } from "lucide-react";
+import { UploadCloud, X, AlertTriangle, ChevronDown, ChevronUp } from "lucide-react";
 import { datasetApi, persistCleaningReport } from "@/lib/api/datasets";
 import { apiErrorMessage } from "@/lib/api/client";
 import { CleaningReport } from "@/lib/types";
@@ -29,70 +29,95 @@ function CountUp({ value }: { value: number }) {
   return <>{display.toLocaleString()}</>;
 }
 
+function formatRows(n: number): string {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1).replace(/\.0$/, "")}M`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(1).replace(/\.0$/, "")}k`;
+  return n.toLocaleString();
+}
+
 export function CleaningReportCard({ report, datasetId }: { report: CleaningReport; datasetId: string }) {
+  const [nullsExpanded, setNullsExpanded] = useState(false);
   const nullColumns = Object.entries(report.null_counts).filter(([, n]) => n > 0);
+  const retentionRate = report.raw_rows > 0
+    ? ((report.rows_ingested / report.raw_rows) * 100).toFixed(1)
+    : "100";
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 14 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, ease: "easeOut" }}
-      className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-5"
+      className="rounded-xl border border-slate-800 bg-slate-900/60 p-4"
     >
-      <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-emerald-400">
-        Cleaning report
-      </h3>
-      <div className="grid grid-cols-3 gap-3 text-center">
-        <div>
-          <div className="text-2xl font-bold text-slate-100">
-            <CountUp value={report.raw_rows} />
-          </div>
-          <div className="text-xs text-slate-400">Raw rows</div>
-        </div>
-        <div>
-          <div className="text-2xl font-bold text-slate-100">
-            <CountUp value={report.rows_ingested} />
-          </div>
-          <div className="text-xs text-slate-400">Rows kept</div>
-        </div>
-        <div>
-          <div className="text-2xl font-bold text-amber-400">
-            <CountUp value={report.duplicates_removed} />
-          </div>
-          <div className="text-xs text-slate-400">Duplicates removed</div>
-        </div>
+      <div className="mb-3 flex items-center justify-between">
+        <h3 className="text-sm font-semibold text-slate-200">Data Cleaning Report</h3>
+        <span className="rounded-full bg-emerald-500/15 px-2.5 py-0.5 text-xs font-medium text-emerald-400">
+          {retentionRate}% retained
+        </span>
       </div>
-      {nullColumns.length > 0 ? (
+
+      {/* Progress bar */}
+      <div className="mb-3 h-1.5 overflow-hidden rounded-full bg-slate-800">
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.3, duration: 0.4 }}
-          className="mt-4"
-        >
-          <div className="mb-2 text-xs text-slate-400">Null values per column:</div>
-          <div className="flex flex-wrap gap-2">
-            {nullColumns.map(([col, count]) => (
-              <motion.span
-                key={col}
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.35, duration: 0.3 }}
-                className="rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-xs text-amber-300"
+          className="h-full rounded-full bg-emerald-500"
+          initial={{ width: 0 }}
+          animate={{ width: `${retentionRate}%` }}
+          transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
+        />
+      </div>
+
+      {/* Arrow flow */}
+      <div className="flex items-center gap-2 text-sm">
+        <span className="text-slate-200"><CountUp value={report.raw_rows} /></span>
+        <span className="text-slate-600">→</span>
+        <span className="text-slate-200"><CountUp value={report.rows_ingested} /></span>
+        {report.duplicates_removed > 0 && (
+          <span className="text-xs text-amber-400">
+            ({formatRows(report.duplicates_removed)} dupes removed)
+          </span>
+        )}
+      </div>
+
+      {/* Null values — compact */}
+      {nullColumns.length > 0 ? (
+        <div className="mt-3">
+          <button
+            onClick={() => setNullsExpanded((v) => !v)}
+            className="flex items-center gap-1.5 text-xs text-amber-400 hover:text-amber-300"
+          >
+            <AlertTriangle className="h-3 w-3" />
+            {nullColumns.length} column{nullColumns.length > 1 ? "s" : ""} with nulls
+            {nullsExpanded ? (
+              <ChevronUp className="h-3 w-3" />
+            ) : (
+              <ChevronDown className="h-3 w-3" />
+            )}
+          </button>
+          <AnimatePresence>
+            {nullsExpanded && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="overflow-hidden"
               >
-                {col}: {count}
-              </motion.span>
-            ))}
-          </div>
-        </motion.div>
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {nullColumns.map(([col, count]) => (
+                    <span
+                      key={col}
+                      className="rounded-full border border-amber-500/30 bg-amber-500/10 px-2.5 py-0.5 text-xs text-amber-300"
+                    >
+                      {col}: {count}
+                    </span>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       ) : (
-        <p className="mt-4 text-xs text-slate-400">No null values detected. Clean data.</p>
-      )}
-      {datasetId && (
-        <a
-          href={`/dashboard/datasets/${datasetId}`}
-          className="mt-4 inline-block text-sm font-medium text-indigo-400 hover:underline"
-        >
-          Open dataset →
-        </a>
+        <p className="mt-3 text-xs text-slate-500">No nulls detected</p>
       )}
     </motion.div>
   );
