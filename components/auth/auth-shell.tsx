@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ReactNode, useState } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Check, Eye, EyeOff, Loader2, Sparkles, X } from "lucide-react";
 
@@ -11,15 +11,24 @@ export function AuthShell({
   children,
   footer,
   features,
-  testimonial,
+  testimonials,
 }: {
   title: string;
   subtitle: string;
   children: ReactNode;
   footer: ReactNode;
   features?: { icon: ReactNode; text: string }[];
-  testimonial?: { quote: string; name: string; role: string };
+  testimonials?: { quote: string; name: string; role: string }[];
 }) {
+  const [activeIdx, setActiveIdx] = useState(0);
+
+  useEffect(() => {
+    if (!testimonials || testimonials.length <= 1) return;
+    const iv = setInterval(() => {
+      setActiveIdx((i) => (i + 1) % testimonials.length);
+    }, 4000);
+    return () => clearInterval(iv);
+  }, [testimonials]);
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-slate-950 px-4 py-12 text-slate-100">
       {/* Background */}
@@ -79,29 +88,55 @@ export function AuthShell({
             </ul>
           )}
 
-          {testimonial && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.5, delay: 0.6 }}
-              className="mt-auto rounded-xl border border-slate-800 bg-slate-900/40 p-4"
-            >
-              <p className="mb-3 text-sm leading-relaxed text-slate-400">
-                &ldquo;{testimonial.quote}&rdquo;
-              </p>
-              <div className="flex items-center gap-2">
-                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-indigo-500/20 text-[10px] font-bold text-indigo-300">
-                  {testimonial.name
-                    .split(" ")
-                    .map((n) => n[0])
-                    .join("")}
-                </div>
-                <div>
-                  <div className="text-xs font-semibold text-slate-300">{testimonial.name}</div>
-                  <div className="text-[11px] text-slate-500">{testimonial.role}</div>
-                </div>
+          {testimonials && testimonials.length > 0 && (
+            <div className="mt-auto">
+              <div className="relative overflow-hidden rounded-xl border border-slate-800 bg-slate-900/40">
+                <div className="absolute left-0 top-0 h-full w-0.5 bg-gradient-to-b from-indigo-500 to-cyan-500" />
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={activeIdx}
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    transition={{ duration: 0.4 }}
+                    className="relative p-4"
+                  >
+                    <div className="mb-2 text-3xl font-bold text-indigo-500/30 leading-none">
+                      &ldquo;
+                    </div>
+                    <p className="mb-3 text-sm leading-relaxed text-slate-400">
+                      {testimonials[activeIdx].quote}
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <div className="flex h-7 w-7 items-center justify-center rounded-full bg-indigo-500/20 text-[10px] font-bold text-indigo-300">
+                        {testimonials[activeIdx].name
+                          .split(" ")
+                          .map((n) => n[0])
+                          .join("")}
+                      </div>
+                      <div>
+                        <div className="text-xs font-semibold text-slate-300">{testimonials[activeIdx].name}</div>
+                        <div className="text-[11px] text-slate-500">{testimonials[activeIdx].role}</div>
+                      </div>
+                    </div>
+                  </motion.div>
+                </AnimatePresence>
               </div>
-            </motion.div>
+              {testimonials.length > 1 && (
+                <div className="mt-3 flex justify-center gap-1.5">
+                  {testimonials.map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setActiveIdx(i)}
+                      className={`h-1 rounded-full transition-all duration-300 ${
+                        i === activeIdx ? "w-5 bg-indigo-500" : "w-1.5 bg-slate-700 hover:bg-slate-600"
+                      }`}
+                      aria-label={`Show testimonial ${i + 1}`}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
           )}
         </motion.div>
 

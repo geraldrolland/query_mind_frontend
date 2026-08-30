@@ -29,7 +29,7 @@ const PieChart = ({rows, labelKey, valueKey, colorFor}: PieChartPropType) => {
         <>
             <ChartContainer config={pieConfig} className="h-64 min-w-[300px]">
               <Chart>
-                <Pie data={pieData} dataKey="value" nameKey="name" outerRadius="80%" paddingAngle={2}
+                <Pie data={pieData} dataKey="value" nameKey="name" outerRadius="80%" paddingAngle={0}
                   label={({ name, value }) => `${name}: ${value}`}
                   labelLine={{ stroke: "#64748b", strokeWidth: 1 }}
                 >

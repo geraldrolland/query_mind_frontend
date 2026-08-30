@@ -20,11 +20,23 @@ const FEATURES = [
   { icon: <BarChart3 className="h-3 w-3" />, text: "AI-powered insights instantly" },
 ];
 
-const TESTIMONIAL = {
-  quote: "I signed up in 30 seconds, uploaded a CSV, and had my first chart. No setup, no config.",
-  name: "Daniel K.",
-  role: "COO, Shopify",
-};
+const TESTIMONIALS = [
+  {
+    quote: "I signed up in 30 seconds, uploaded a CSV, and had my first chart. No setup, no config.",
+    name: "Daniel K.",
+    role: "COO, Shopify",
+  },
+  {
+    quote: "The best data tool I've used. Clean, fast, and the charts look incredible.",
+    name: "Aisha M.",
+    role: "Head of Analytics, Figma",
+  },
+  {
+    quote: "Finally, a tool that lets me focus on the question, not the query language.",
+    name: "Tom W.",
+    role: "Founder, Linear",
+  },
+];
 
 export default function SignUpPage() {
   const { register } = useAuth();
@@ -60,7 +72,7 @@ export default function SignUpPage() {
       title="Create your account"
       subtitle="Start asking your data questions in minutes"
       features={FEATURES}
-      testimonial={TESTIMONIAL}
+      testimonials={TESTIMONIALS}
       footer={
         <span>
           Already have an account?{" "}

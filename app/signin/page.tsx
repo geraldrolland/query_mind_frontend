@@ -20,11 +20,23 @@ const FEATURES = [
   { icon: <ShieldCheck className="h-3 w-3" />, text: "Your data stays secure" },
 ];
 
-const TESTIMONIAL = {
-  quote: "The cleaning report alone saves me an hour a week. Now I just type my question and get a chart.",
-  name: "Maya R.",
-  role: "Data Analyst, Stripe",
-};
+const TESTIMONIALS = [
+  {
+    quote: "The cleaning report alone saves me an hour a week. Now I just type my question and get a chart.",
+    name: "Maya R.",
+    role: "Data Analyst, Stripe",
+  },
+  {
+    quote: "I stopped waiting on the data team. QueryMind gives me answers in seconds, not days.",
+    name: "James L.",
+    role: "Product Manager, Notion",
+  },
+  {
+    quote: "Our whole team uses it now. The charts are presentation-ready from the start.",
+    name: "Priya S.",
+    role: "Growth Lead, Vercel",
+  },
+];
 
 function SignInForm() {
   const { login } = useAuth();
@@ -53,7 +65,7 @@ function SignInForm() {
       title="Welcome back"
       subtitle="Sign in to query your datasets"
       features={FEATURES}
-      testimonial={TESTIMONIAL}
+      testimonials={TESTIMONIALS}
       footer={
         <span>
           New to QueryMind?{" "}
