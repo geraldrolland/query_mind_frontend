@@ -13,11 +13,18 @@ const FEATURES = [
   { icon: <CheckCircle2 className="h-3 w-3" />, text: "Unlock all features" },
 ];
 
-const TESTIMONIAL = {
-  quote: "Verification was instant. Signed up, verified, and had my first chart in under a minute.",
-  name: "Chris M.",
-  role: "Founder, DataLoop",
-};
+const TESTIMONIALS = [
+  {
+    quote: "Verification was instant. Signed up, verified, and had my first chart in under a minute.",
+    name: "Chris M.",
+    role: "Founder, DataLoop",
+  },
+  {
+    quote: "Smooth onboarding. The whole process felt effortless from start to finish.",
+    name: "Rachel K.",
+    role: "Analytics Lead, Airbnb",
+  },
+];
 
 function VerifyEmailPageContent() {
   const [email, setEmail] = useState("");
@@ -67,7 +74,7 @@ function VerifyEmailPageContent() {
           : "Confirm your email address to continue"
       }
       features={FEATURES}
-      testimonial={TESTIMONIAL}
+      testimonials={TESTIMONIALS}
       footer={
         <Link href="/signin" className="font-medium text-indigo-400 transition hover:text-indigo-300">
           Go to sign in

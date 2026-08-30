@@ -19,11 +19,18 @@ const FEATURES = [
   { icon: <Mail className="h-3 w-3" />, text: "Sent to your inbox" },
 ];
 
-const TESTIMONIAL = {
-  quote: "Reset my password in under a minute. The email came instantly and I was back to querying.",
-  name: "Sofia L.",
-  role: "Product Manager, Notion",
-};
+const TESTIMONIALS = [
+  {
+    quote: "Reset my password in under a minute. The email came instantly and I was back to querying.",
+    name: "Sofia L.",
+    role: "Product Manager, Notion",
+  },
+  {
+    quote: "Fast, simple, and no hassle. Exactly what you want from a password reset flow.",
+    name: "Alex T.",
+    role: "Data Engineer, Stripe",
+  },
+];
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -53,7 +60,7 @@ export default function ForgotPasswordPage() {
       title="Reset your password"
       subtitle="We'll email you a link to set a new password"
       features={FEATURES}
-      testimonial={TESTIMONIAL}
+      testimonials={TESTIMONIALS}
       footer={
         <Link href="/signin" className="font-medium text-indigo-400 transition hover:text-indigo-300">
           Back to sign in

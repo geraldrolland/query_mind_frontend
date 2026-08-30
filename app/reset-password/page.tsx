@@ -21,11 +21,18 @@ const FEATURES = [
   { icon: <ArrowRight className="h-3 w-3" />, text: "Back to querying in seconds" },
 ];
 
-const TESTIMONIAL = {
-  quote: "Reset flow was seamless. One click, new password, back to work.",
-  name: "Alex T.",
-  role: "Engineering Lead, Vercel",
-};
+const TESTIMONIALS = [
+  {
+    quote: "Reset flow was seamless. One click, new password, back to work.",
+    name: "Alex T.",
+    role: "Engineering Lead, Vercel",
+  },
+  {
+    quote: "Quick and painless. I was back in my account before my coffee got cold.",
+    name: "Maria C.",
+    role: "Product Designer, Figma",
+  },
+];
 
 function ResetPasswordForm() {
   const searchParams = useSearchParams();
@@ -78,7 +85,7 @@ function ResetPasswordForm() {
       title="Choose a new password"
       subtitle="Enter a new password for your account"
       features={FEATURES}
-      testimonial={TESTIMONIAL}
+      testimonials={TESTIMONIALS}
       footer={
         <Link href="/signin" className="font-medium text-indigo-400 transition hover:text-indigo-300">
           Back to sign in

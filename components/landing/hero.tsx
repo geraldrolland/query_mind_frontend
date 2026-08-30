@@ -2,15 +2,15 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
-import { ArrowRight, Sparkles } from "lucide-react";
+import { motion, AnimatePresence, useReducedMotion, useScroll, useTransform } from "framer-motion";
+import { ArrowRight, Sparkles, MessageSquareText, BarChart3, Database } from "lucide-react";
 import { CountUp } from "./count-up";
 
-const PHRASES = [
-  "average revenue by region",
-  "top customers this quarter",
-  "monthly signups in 2025",
-  "which plan converts best",
+const FEATURES = [
+  { icon: <Sparkles className="h-5 w-5" />, title: "Clean data automatically", desc: "Duplicates removed, missing values reported" },
+  { icon: <MessageSquareText className="h-5 w-5" />, title: "Ask in plain English", desc: "No SQL or formulas needed" },
+  { icon: <BarChart3 className="h-5 w-5" />, title: "Instant charts & tables", desc: "Visual answers in one click" },
+  { icon: <Database className="h-5 w-5" />, title: "Zero setup required", desc: "Upload CSV and start asking" },
 ];
 
 const TITLE = ["Ask your data", "anything"];
@@ -26,9 +26,7 @@ const TRUSTED = ["Acme Corp", "TechFlow", "DataStack", "InsightBase", "Metricly"
 
 export function Hero() {
   const reduce = useReducedMotion();
-  const [phraseIdx, setPhraseIdx] = useState(0);
-  const [chars, setChars] = useState(0);
-  const [deleting, setDeleting] = useState(false);
+  const [activeIdx, setActiveIdx] = useState(0);
 
   const { scrollY } = useScroll();
   const orb1Y = useTransform(scrollY, [0, 600], [0, -80]);
@@ -37,26 +35,11 @@ export function Hero() {
 
   useEffect(() => {
     if (reduce) return;
-    const phrase = PHRASES[phraseIdx];
-    const delay = deleting ? 28 : 55;
     const iv = setInterval(() => {
-      setChars((c) => {
-        if (!deleting && c >= phrase.length) {
-          clearInterval(iv);
-          setTimeout(() => setDeleting(true), 1800);
-          return c;
-        }
-        if (deleting && c <= 0) {
-          clearInterval(iv);
-          setDeleting(false);
-          setPhraseIdx((i) => (i + 1) % PHRASES.length);
-          return c;
-        }
-        return deleting ? c - 1 : c + 1;
-      });
-    }, delay);
+      setActiveIdx((i) => (i + 1) % FEATURES.length);
+    }, 3000);
     return () => clearInterval(iv);
-  }, [phraseIdx, deleting, reduce]);
+  }, [reduce]);
 
   return (
     <section className="relative overflow-hidden">
@@ -167,22 +150,40 @@ export function Hero() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.8, delay: 0.9 }}
-          className="mx-auto mt-12 max-w-2xl rounded-2xl border border-slate-800 bg-slate-900/60 p-4"
+          className="mx-auto mt-12 h-20 max-w-2xl"
         >
-          <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3">
-            {PHRASES.map((p, i) => (
-              <span key={p} className="flex items-center gap-2 text-sm text-slate-400">
-                <span className="hidden h-4 w-4 items-center justify-center rounded-md bg-indigo-500/15 text-[10px] font-bold text-indigo-300 sm:flex">
-                  {i + 1}
-                </span>
-                <span className="font-mono text-xs">
-                  &ldquo;{reduce ? p : p.slice(0, chars)}&rdquo;
-                  {i === phraseIdx && !reduce && (
-                    <span className="ml-0.5 inline-block h-3.5 w-[2px] animate-caret bg-indigo-400 align-middle" />
-                  )}
-                </span>
-              </span>
-            ))}
+          <div className="relative rounded-2xl border border-slate-800 bg-slate-900/60 p-4">
+            <div className="pointer-events-none absolute inset-0 rounded-2xl bg-gradient-to-r from-indigo-500/5 via-transparent to-cyan-500/5" />
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeIdx}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -12 }}
+                transition={{ duration: 0.4 }}
+                className="flex items-center gap-4"
+              >
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-500/15 text-indigo-400">
+                  {FEATURES[activeIdx].icon}
+                </div>
+                <div className="text-left">
+                  <div className="text-sm font-semibold text-slate-200">{FEATURES[activeIdx].title}</div>
+                  <div className="text-xs text-slate-500">{FEATURES[activeIdx].desc}</div>
+                </div>
+              </motion.div>
+            </AnimatePresence>
+            <div className="mt-3 flex justify-center gap-1.5">
+              {FEATURES.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setActiveIdx(i)}
+                  className={`h-1 rounded-full transition-all duration-300 ${
+                    i === activeIdx ? "w-6 bg-indigo-500" : "w-1.5 bg-slate-700 hover:bg-slate-600"
+                  }`}
+                  aria-label={`Show feature ${i + 1}`}
+                />
+              ))}
+            </div>
           </div>
         </motion.div>
 
