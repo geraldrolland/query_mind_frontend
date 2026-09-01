@@ -4,16 +4,18 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
-import { Sparkles, Database, LogOut, Menu, X } from "lucide-react";
+import { Sparkles, Database, LogOut, Menu, X, MessageSquare } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { FeedbackModal } from "@/components/review/feedback-modal";
 
 const NAV = [
   { href: "/dashboard/datasets", label: "Datasets", icon: Database },
 ];
 
-function SidebarContent({ onLogout, onNavigate }: {
+function SidebarContent({ onLogout, onNavigate, onFeedback }: {
   onLogout: () => void;
   onNavigate?: () => void;
+  onFeedback: () => void;
 }) {
   const pathname = usePathname();
   return (
@@ -62,7 +64,15 @@ function SidebarContent({ onLogout, onNavigate }: {
         })}
       </nav>
 
-      <div className="border-t border-slate-800/60 p-3">
+      <div className="border-t border-slate-800/60 p-3 space-y-1">
+        <motion.button
+          whileHover={{ x: 2 }}
+          onClick={() => { onFeedback(); onNavigate?.(); }}
+          className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-slate-500 transition-colors hover:bg-slate-800/60 hover:text-slate-300"
+        >
+          <MessageSquare className="h-4 w-4" />
+          Feedback
+        </motion.button>
         <motion.button
           whileHover={{ x: 2 }}
           onClick={onLogout}
@@ -80,6 +90,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const pathname = usePathname();
   const { status, logout } = useAuth();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
 
   // Don't mount page children (which fire API calls) until the session has
   // been validated against the backend. If the session is invalid the guard
@@ -104,7 +115,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         transition={{ duration: 0.45, ease: [0.21, 0.47, 0.32, 0.98] }}
         className="fixed inset-y-0 left-0 z-30 hidden w-60 flex-col overflow-hidden border-r border-slate-800 bg-slate-900/60 lg:flex"
       >
-        <SidebarContent onLogout={() => logout()} />
+        <SidebarContent onLogout={() => logout()} onFeedback={() => setFeedbackOpen(true)} />
       </motion.aside>
 
       {/* Mobile top bar */}
@@ -156,6 +167,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <SidebarContent
                 onLogout={() => logout()}
                 onNavigate={() => setMobileNavOpen(false)}
+                onFeedback={() => setFeedbackOpen(true)}
               />
             </motion.aside>
           </>
@@ -175,6 +187,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </motion.div>
         </AnimatePresence>
       </main>
+
+      <FeedbackModal open={feedbackOpen} onClose={() => setFeedbackOpen(false)} />
     </div>
   );
 }
