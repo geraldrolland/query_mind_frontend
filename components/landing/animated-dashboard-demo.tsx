@@ -764,7 +764,7 @@ export function AnimatedDashboardDemo() {
         </div>
 
         {/* Main content */}
-        <div className="flex h-[560px]">
+        <div className="flex min-h-[400px] h-[70vh] max-h-[560px]">
           <DemoSidebar active={screen === "assistant" ? "assistant" : "datasets"} />
 
           <div className="relative flex-1 overflow-hidden">
